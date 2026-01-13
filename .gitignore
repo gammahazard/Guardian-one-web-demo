@@ -1,0 +1,19 @@
+# Dependencies
+/target
+Cargo.lock
+
+# Trunk build
+/dashboard/dist
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
