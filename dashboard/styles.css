@@ -586,6 +586,59 @@ body {
     color: var(--accent-warning);
 }
 
+/* Sensor Comparison */
+.sensor-comparison {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.sensor-comparison h4 {
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.sensor-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.sensor-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+}
+
+.sensor-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.sensor-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.sensor-value.success {
+    color: var(--accent-success);
+}
+
+.sensor-value.warning {
+    color: var(--accent-warning);
+}
+
+.action-btn.run-sensor {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: white;
+    margin-left: auto;
+}
+
 /* Terminals Container */
 .terminals-container {
     display: grid;
