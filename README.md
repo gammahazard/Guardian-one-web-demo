@@ -62,6 +62,23 @@
 | **The Demo** | Live attack simulations — Python (Pyodide) vs WASM side-by-side |
 | **The Proof** | Real metrics + foundation project links |
 
+<details>
+<summary><strong>📸 Screenshots</strong></summary>
+
+### The Problem
+![Problem Tab](diagrams/screenshot-problem.png)
+
+### The Hardware
+![Hardware Tab](diagrams/screenshot-hardware.png)
+
+### The Demo
+![Demo Tab](diagrams/screenshot-demo.png)
+
+### The Proof
+![Proof Tab](diagrams/screenshot-proof.png)
+
+</details>
+
 ---
 
 ## Quick Start
