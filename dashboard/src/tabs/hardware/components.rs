@@ -83,7 +83,7 @@ pub fn ComponentsSection() -> impl IntoView {
                 >
                     <ComponentCard 
                         name="QNAP NAS" 
-                        role="Historian + Raft Storage" 
+                        role="Historian + External Audit Log" 
                         zone="Level 3"
                     />
                     <ComponentCard 
