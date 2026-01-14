@@ -407,7 +407,14 @@ body {
 .stat-source {
     display: block;
     font-size: 0.7rem;
-    color: var(--text-secondary);
+    color: var(--accent-primary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.stat-source:hover {
+    color: var(--accent-secondary);
+    text-decoration: underline;
 }
 
 .wasm-contrast {
@@ -2653,6 +2660,14 @@ body {
     line-height: 1.6;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
     animation: tooltip-fade-in 0.15s ease-out;
+}
+
+/* Overlay to catch clicks outside tooltip and close it */
+.tooltip-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(0, 0, 0, 0.3);
 }
 
 @keyframes tooltip-fade-in {

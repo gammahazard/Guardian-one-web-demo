@@ -20,6 +20,11 @@ const CVE_DESKTOP_DESC: &str = "Docker Desktop escape — malicious container ga
 const CVE_DESKTOP_SCORE: &str = "9.3";
 const CVE_DESKTOP_URL: &str = "https://nvd.nist.gov/vuln/detail/CVE-2025-9074";
 
+// ICS stats with source URLs
+const STAT1_URL: &str = "https://socradar.io/blog/cisa-industrial-control-systems-ics-advisories-2025/";
+const STAT2_URL: &str = "https://www.securityweek.com/670-ics-vulnerabilities-disclosed-by-cisa-in-first-half-of-2023-analysis/";
+const STAT3_URL: &str = "https://industrialcyber.co/industrial-cyber-attacks/new-ics-vulnerabilities-report-highlights-trends-and-increases-in-cves-despite-fewer-cisa-advisories/";
+
 /// renders the vulnerabilities section with CVE cards and ICS stats
 #[component]
 pub fn VulnerabilitiesSection() -> impl IntoView {
@@ -61,17 +66,20 @@ pub fn VulnerabilitiesSection() -> impl IntoView {
                     <StatCard 
                         value="40%"
                         label="increase in internet-exposed ICS devices"
-                        source="CISA/SocRadar 2024"
+                        source="SocRadar 2024"
+                        url=STAT1_URL
                     />
                     <StatCard 
                         value="33%"
                         label="of ICS vulnerabilities have no available patch"
-                        source="SecurityWeek/CISA H1 2023"
+                        source="SecurityWeek 2023"
+                        url=STAT2_URL
                     />
                     <StatCard 
                         value="44%"
-                        label="of ICS attacks target critical manufacturing"
+                        label="of ICS CVEs target manufacturing sector"
                         source="IndustrialCyber 2023"
+                        url=STAT3_URL
                     />
                 </div>
             </div>
@@ -109,18 +117,19 @@ fn CveCard(
     }
 }
 
-/// statistic card for ICS data
+/// statistic card for ICS data with clickable source link
 #[component]
 fn StatCard(
     value: &'static str,
     label: &'static str,
     source: &'static str,
+    url: &'static str,
 ) -> impl IntoView {
     view! {
         <div class="stat-card">
             <span class="stat-value">{value}</span>
             <span class="stat-label">{label}</span>
-            <span class="stat-source">{source}</span>
+            <a href={url} target="_blank" rel="noopener" class="stat-source">{source}" →"</a>
         </div>
     }
 }

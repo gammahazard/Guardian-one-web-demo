@@ -140,6 +140,10 @@ fn ComponentCategory(
                 </button>
             </h4>
             <Show when=move || show_tooltip.get()>
+                <div 
+                    class="tooltip-overlay" 
+                    on:click=move |_| set_show_tooltip.set(false)
+                />
                 <div class="tooltip-popup">
                     <div class="tooltip-content">{tooltip}</div>
                     <button 
