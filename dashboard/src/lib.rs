@@ -64,7 +64,7 @@ pub fn App() -> impl IntoView {
             </main>
 
             <footer class="footer">
-                <p>"Part of the Reliability Triad Portfolio"</p>
+                <p>"Part of the Reliability Triad Portfolio • Powered by "<a href="https://wasi.dev/" target="_blank" rel="noopener">"WASI 0.2"</a></p>
             </footer>
         </div>
     }

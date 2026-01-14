@@ -835,7 +835,7 @@ result
                         </div>
                         <button 
                             class="action-btn run-sensor"
-                            disabled=move || sensor_running.get() || !pyodide_ready.get()
+                            disabled=move || sensor_running.get() || !pyodide_ready.get() || is_running.get()
                             title=move || if pyodide_ready.get() { "Run real sensor code in both runtimes".to_string() } else { "Waiting for Pyodide to load...".to_string() }
                             on:click=move |_| run_sensor_comparison(())
                         >
@@ -1036,6 +1036,7 @@ result
                     <button 
                         class="action-btn reset" 
                         title="Reset all stats and terminals"
+                        disabled=move || is_running.get()
                         on:click=move |_| reset_demo(())
                     >
                         "🔄 Reset"
