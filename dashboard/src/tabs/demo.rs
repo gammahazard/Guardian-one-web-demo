@@ -379,6 +379,38 @@ pub fn Demo() -> impl IntoView {
         }
     });
     
+    // Auto-scroll terminals to bottom when logs update
+    create_effect(move |_| {
+        let _ = python_logs.get(); // Track changes
+        // Use request_animation_frame to scroll after DOM updates
+        if let Some(window) = web_sys::window() {
+            let _ = window.request_animation_frame(
+                wasm_bindgen::closure::Closure::once_into_js(|| {
+                    if let Some(doc) = web_sys::window().and_then(|w| w.document()) {
+                        if let Some(el) = doc.get_element_by_id("python-terminal") {
+                            el.set_scroll_top(el.scroll_height());
+                        }
+                    }
+                }).unchecked_ref()
+            );
+        }
+    });
+    
+    create_effect(move |_| {
+        let _ = wasm_logs.get(); // Track changes
+        if let Some(window) = web_sys::window() {
+            let _ = window.request_animation_frame(
+                wasm_bindgen::closure::Closure::once_into_js(|| {
+                    if let Some(doc) = web_sys::window().and_then(|w| w.document()) {
+                        if let Some(el) = doc.get_element_by_id("wasm-terminal") {
+                            el.set_scroll_top(el.scroll_height());
+                        }
+                    }
+                }).unchecked_ref()
+            );
+        }
+    });
+    
     // ========================================================================
     // sensor comparison handler - runs REAL Python via Pyodide and REAL WASM
     // ========================================================================
@@ -820,7 +852,7 @@ result
                 // python terminal - 2oo3 TMR attempt (fails during respawn)
                 <div class="terminal-panel python-panel">
                     <div class="terminal-header">
-                        <span class="terminal-title" attr:data-tooltip="Python multiprocessing.Pool with 3 workers - voting blocked if any worker crashes (~1.5s respawn)">"🐍 Python (2oo3 TMR attempt)"</span>
+                        <span class="terminal-title" attr:data-tooltip="Python multiprocessing with 3 workers - L/F election takes ~1.5s vs WASM's 0.04ms">"🐍 Python (2oo3 TMR / Raft-like)"</span>
                         <span class="terminal-status" class:crashed=move || python_restarting.get()>
                             {move || if python_restarting.get() { "⏳ RESPAWNING" } else { "🟢 3/3 UP" }}
                         </span>
@@ -1016,7 +1048,7 @@ result
                     <p>"This demonstrates "<strong>"WASI 0.2's deny-by-default security"</strong>" combined with "<strong>"2oo3 Triple Modular Redundancy"</strong>". TMR requires comparing 3 outputs to detect faults."</p>
                     <ul>
                         <li><strong>"🐍 Python:"</strong>" Crash kills worker mid-computation → no output. Only 2 outputs remain—can't detect if one is wrong (Byzantine fault). Must wait ~1.5s to respawn before TMR works again."</li>
-                        <li><strong>"🦀 WASM:"</strong>" Trap completes instantly → returns 'TRAP' as output. All 3 outputs compared → 2/3 agree → use majority. Rebuild in 0.04ms. Byzantine detection continuous."</li>
+                        <li><strong>"🦀 WASM:"</strong>" Trap completes instantly → returns 'TRAP' as output. All 3 outputs compared → 2/3 agree → use majority. Rebuild in sub-ms. Byzantine detection continuous."</li>
                         <li>
                             <strong>"🔒 WIT Contract:"</strong>" "
                             <a class="wit-link" href="#" on:click=move |e: web_sys::MouseEvent| {
@@ -1026,7 +1058,7 @@ result
                             " (defines granted capabilities)"
                         </li>
                     </ul>
-                    <p class="hardware-note">"🔧 "<strong>"Key Insight:"</strong>" WASM's 0.04ms rebuild keeps all 3 outputs available for comparison. Python's 1.5s window = no Byzantine detection during recovery."</p>
+                    <p class="hardware-note">"🔧 "<strong>"Key Insight:"</strong>" WASM's sub-millisecond rebuild keeps all 3 outputs available. Python's ~1.5s window = no Byzantine detection during recovery."</p>
                 </div>
             </div>
             
