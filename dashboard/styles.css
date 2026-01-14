@@ -102,23 +102,14 @@ body {
 }
 
 .tab.active {
-    background: linear-gradient(135deg, var(--accent-primary), #6366f1);
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     border-color: transparent;
     color: white;
     font-weight: 600;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-}
-
-.tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    background: var(--accent-primary);
-    border-radius: 50%;
+    box-shadow:
+        0 0 20px rgba(0, 212, 255, 0.4),
+        0 0 40px rgba(124, 58, 237, 0.2),
+        0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* Content Area */
