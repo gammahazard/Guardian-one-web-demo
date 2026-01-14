@@ -53,7 +53,7 @@ pub fn ComplianceSection() -> impl IntoView {
             
             <div class="compliance-note">
                 <strong>"Key Security Property: "</strong>
-                "The Guardian Cluster acts as a one-way data diode. Telemetry flows UP, but no external commands can reach the PLC without WIT contract validation."
+                "The Guardian Cluster acts as a logical data diode / secure gateway. Telemetry flows UP, but no external commands can reach the PLC without WIT contract validation."
             </div>
         </div>
     }
