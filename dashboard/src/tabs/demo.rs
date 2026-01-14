@@ -44,15 +44,22 @@ pub fn Demo() -> impl IntoView {
     // Attack comparison state
     let (attack_ran, set_attack_ran) = create_signal(false);
     
-    // WASM run handler
-    let run_wasm = move |_| {
+    // Button disabled state for debounce
+    let (run_disabled, set_run_disabled) = create_signal(false);
+    
+    // Combined run handler - runs BOTH Python and WASM
+    let run_both = move |_| {
+        // Disable button briefly
+        set_run_disabled.set(true);
+        
+        // Run WASM immediately (near-instant)
         let start = web_sys::window()
             .unwrap()
             .performance()
             .unwrap()
             .now();
         
-        let elapsed = web_sys::window()
+        let wasm_elapsed = web_sys::window()
             .unwrap()
             .performance()
             .unwrap()
@@ -60,34 +67,36 @@ pub fn Demo() -> impl IntoView {
         
         set_wasm_output.set(vec![
             ("$ wasmtime sensor_driver.wasm".to_string(), ""),
-            (format!("[OK] Module instantiated in {:.2}ms", elapsed), "success"),
+            (format!("[OK] Module instantiated in {:.2}ms", wasm_elapsed), "success"),
             ("[OK] Reading sensor...".to_string(), "success"),
             ("Temperature: 23.5°C".to_string(), ""),
             ("Humidity: 45.2%".to_string(), ""),
             ("Pressure: 1013.25 hPa".to_string(), ""),
         ]);
-        set_wasm_time.set(Some(elapsed));
-    };
-    
-    // Python run handler (simulates Pyodide load time)
-    let run_python = move |_| {
+        set_wasm_time.set(Some(wasm_elapsed));
+        
+        // Start Python loading
         set_python_output.set(vec![
             ("$ python sensor_driver.py".to_string(), ""),
             ("[...] Loading Pyodide runtime (~12MB)...".to_string(), "warning"),
         ]);
         
+        // Python finishes after delay
         let cb = Closure::wrap(Box::new(move || {
-            let elapsed = 2340.0; // Simulated Pyodide load
+            let python_elapsed = 2340.0 + (js_sys::Math::random() * 200.0); // Add slight randomness
             set_python_output.set(vec![
                 ("$ python sensor_driver.py".to_string(), ""),
-                (format!("[OK] Pyodide loaded in {:.0}ms", elapsed), "success"),
+                (format!("[OK] Pyodide loaded in {:.0}ms", python_elapsed), "success"),
                 ("[OK] Importing modules...".to_string(), "success"),
                 ("[OK] BME280 driver initialized".to_string(), "success"),
                 ("Temperature: 23.5°C".to_string(), ""),
                 ("Humidity: 45.2%".to_string(), ""),
                 ("Pressure: 1013.25 hPa".to_string(), ""),
             ]);
-            set_python_time.set(Some(elapsed));
+            set_python_time.set(Some(python_elapsed));
+            
+            // Re-enable button
+            set_run_disabled.set(false);
         }) as Box<dyn Fn()>);
         
         web_sys::window()
@@ -152,13 +161,17 @@ pub fn Demo() -> impl IntoView {
         <div class="tab-content demo-tab">
             <h2>"The Demo: Python vs WASM Side-by-Side"</h2>
             
-            // Run buttons
-            <div class="run-buttons">
-                <button class="run-btn python" on:click=run_python>
-                    "▶ Run Python"
-                </button>
-                <button class="run-btn wasm" on:click=run_wasm>
-                    "▶ Run WASM"
+            // Initialization Time section
+            <div class="demo-section">
+                <h3>"⏱️ Initialization Time"</h3>
+                <p class="section-desc">"Compare cold start performance between runtimes"</p>
+                
+                <button 
+                    class="run-btn primary"
+                    disabled=move || run_disabled.get()
+                    on:click=run_both
+                >
+                    "▶ Run Comparison"
                 </button>
             </div>
             
