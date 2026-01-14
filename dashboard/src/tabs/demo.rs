@@ -490,24 +490,30 @@ pub fn Demo() -> impl IntoView {
                 <div class="attack-buttons">
                     <button 
                         class="attack-btn"
-                        class:selected=move || selected_attack.get() == "bufferOverflow"
+                        class:selected=move || selected_attack.get() == "bufferOverflow" && !is_running.get()
+                        class:running=move || selected_attack.get() == "bufferOverflow" && is_running.get()
                         disabled=move || is_running.get()
+                        title="Memory corruption attack - causes process crash"
                         on:click=move |_| set_selected_attack.set("bufferOverflow".to_string())
                     >
                         "💥 Buffer Overflow"
                     </button>
                     <button 
                         class="attack-btn"
-                        class:selected=move || selected_attack.get() == "dataExfil"
+                        class:selected=move || selected_attack.get() == "dataExfil" && !is_running.get()
+                        class:running=move || selected_attack.get() == "dataExfil" && is_running.get()
                         disabled=move || is_running.get()
+                        title="Attempts unauthorized network connection"
                         on:click=move |_| set_selected_attack.set("dataExfil".to_string())
                     >
                         "📤 Data Exfil"
                     </button>
                     <button 
                         class="attack-btn"
-                        class:selected=move || selected_attack.get() == "pathTraversal"
+                        class:selected=move || selected_attack.get() == "pathTraversal" && !is_running.get()
+                        class:running=move || selected_attack.get() == "pathTraversal" && is_running.get()
                         disabled=move || is_running.get()
+                        title="Attempts to read sensitive files"
                         on:click=move |_| set_selected_attack.set("pathTraversal".to_string())
                     >
                         "📁 Path Traversal"

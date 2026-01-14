@@ -822,6 +822,13 @@ body {
     background: rgba(0, 212, 255, 0.1);
 }
 
+/* Attack button running state */
+.attack-btn.running {
+    border-color: var(--accent-warning);
+    background: rgba(245, 158, 11, 0.2);
+    animation: pulse 1s infinite;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .header h1 {
