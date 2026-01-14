@@ -1,7 +1,10 @@
-// what: problem tab module
-// why: organizes the problem explanation component
-// relations: exports Problem component to tabs/mod.rs
+// what: problem tab module with modular sub-sections
+// why: organizes problem tab content into reusable components
+// relations: exposes Problem component to parent tabs module
 
 mod component;
+mod quotes;
+mod vulnerabilities;
+mod comparison;
 
 pub use component::Problem;
