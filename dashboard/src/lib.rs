@@ -30,33 +30,33 @@ pub fn App() -> impl IntoView {
 
             <nav class="tabs">
                 <button
-                    class=move || if active_tab() == Tab::Problem { "tab active" } else { "tab" }
-                    on:click=move |_| set_active_tab(Tab::Problem)
+                    class=move || if active_tab.get() == Tab::Problem { "tab active" } else { "tab" }
+                    on:click=move |_| set_active_tab.set(Tab::Problem)
                 >
                     "The Problem"
                 </button>
                 <button
-                    class=move || if active_tab() == Tab::Hardware { "tab active" } else { "tab" }
-                    on:click=move |_| set_active_tab(Tab::Hardware)
+                    class=move || if active_tab.get() == Tab::Hardware { "tab active" } else { "tab" }
+                    on:click=move |_| set_active_tab.set(Tab::Hardware)
                 >
                     "The Hardware"
                 </button>
                 <button
-                    class=move || if active_tab() == Tab::Demo { "tab active" } else { "tab" }
-                    on:click=move |_| set_active_tab(Tab::Demo)
+                    class=move || if active_tab.get() == Tab::Demo { "tab active" } else { "tab" }
+                    on:click=move |_| set_active_tab.set(Tab::Demo)
                 >
                     "The Demo"
                 </button>
                 <button
-                    class=move || if active_tab() == Tab::Proof { "tab active" } else { "tab" }
-                    on:click=move |_| set_active_tab(Tab::Proof)
+                    class=move || if active_tab.get() == Tab::Proof { "tab active" } else { "tab" }
+                    on:click=move |_| set_active_tab.set(Tab::Proof)
                 >
                     "The Proof"
                 </button>
             </nav>
 
             <main class="content">
-                {move || match active_tab() {
+                {move || match active_tab.get() {
                     Tab::Problem => view! { <Problem /> }.into_view(),
                     Tab::Hardware => view! { <Hardware /> }.into_view(),
                     Tab::Demo => view! { <Demo /> }.into_view(),

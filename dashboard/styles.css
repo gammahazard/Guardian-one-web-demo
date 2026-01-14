@@ -1,0 +1,414 @@
+/* what: main stylesheet for reliability triad console
+   why: dark industrial theme matching portfolio aesthetic
+   relations: loaded by index.html, styles all tabs and components */
+
+:root {
+    --bg-primary: #0a0a0f;
+    --bg-secondary: #12121a;
+    --bg-card: #1a1a25;
+    --accent-primary: #00d4ff;
+    --accent-secondary: #7c3aed;
+    --accent-success: #22c55e;
+    --accent-warning: #f59e0b;
+    --accent-danger: #ef4444;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --border-color: #2d2d3a;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+.app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Header */
+.header {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+    padding: 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header h1 {
+    font-size: 2rem;
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header .subtitle {
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+/* Tab Navigation */
+.tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+.tab {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.tab:hover {
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+}
+
+.tab.active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: var(--bg-primary);
+    font-weight: 600;
+}
+
+/* Content Area */
+.content {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.tab-content h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--accent-primary);
+}
+
+/* Comparison Grid */
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.comparison-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.comparison-card.docker {
+    border-left: 4px solid var(--accent-danger);
+}
+
+.comparison-card.wasm {
+    border-left: 4px solid var(--accent-success);
+}
+
+.comparison-card h3 {
+    margin-bottom: 1rem;
+}
+
+.comparison-card ul {
+    list-style: none;
+}
+
+.comparison-card li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.comparison-card li:last-child {
+    border-bottom: none;
+}
+
+/* Architecture Diagram */
+.architecture-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.purdue-level {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.purdue-level.level-3 { border-left: 4px solid #8b5cf6; }
+.purdue-level.level-2 { border-left: 4px solid var(--accent-primary); }
+.purdue-level.level-1 { border-left: 4px solid var(--accent-success); }
+.purdue-level.level-0 { border-left: 4px solid var(--accent-warning); }
+
+.level-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+.level-content {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.component {
+    background: var(--bg-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.component.guardian {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(124, 58, 237, 0.2));
+    border: 1px solid var(--accent-primary);
+}
+
+/* Metrics */
+.metrics-comparison {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.metric-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.metric-card h4 {
+    margin-bottom: 1rem;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.metric-row:last-child {
+    border-bottom: none;
+}
+
+.metric-row .label {
+    color: var(--text-secondary);
+}
+
+.metric-row .value.measured {
+    color: var(--accent-success);
+}
+
+.metric-row .value.estimate {
+    color: var(--accent-warning);
+}
+
+/* Attack Arena */
+.attack-arena {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+}
+
+.attack-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.attack-btn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--accent-danger), #dc2626);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.attack-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.attack-result {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-primary);
+    display: none;
+}
+
+.attack-result.visible {
+    display: block;
+}
+
+/* Demo Panels */
+.demo-panels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.panel {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.panel.python-panel {
+    border-top: 4px solid var(--accent-warning);
+}
+
+.panel.wasm-panel {
+    border-top: 4px solid var(--accent-success);
+}
+
+.terminal {
+    background: #000;
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    margin-top: 1rem;
+}
+
+.terminal-line {
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.terminal-line.success {
+    color: var(--accent-success);
+}
+
+/* Proof Tab */
+.video-placeholder {
+    margin-bottom: 2rem;
+}
+
+.video-frame {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 4rem;
+    text-align: center;
+    border: 2px dashed var(--border-color);
+}
+
+.coming-soon {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.measured-metrics table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.measured-metrics th,
+.measured-metrics td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.measured-metrics th {
+    color: var(--text-secondary);
+}
+
+.foundation-links {
+    margin-top: 2rem;
+}
+
+.foundation-links ul {
+    list-style: none;
+    margin-top: 1rem;
+}
+
+.foundation-links li {
+    padding: 0.5rem 0;
+}
+
+.foundation-links a {
+    color: var(--accent-primary);
+    text-decoration: none;
+}
+
+.foundation-links a:hover {
+    text-decoration: underline;
+}
+
+/* Footer */
+.footer {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .tabs {
+        gap: 0.25rem;
+    }
+    
+    .tab {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+    
+    .content {
+        padding: 1rem;
+    }
+}
+
+/* Disable tooltips on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    [data-tip]:hover::after {
+        display: none;
+    }
+}
