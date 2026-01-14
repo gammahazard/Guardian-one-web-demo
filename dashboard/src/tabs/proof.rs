@@ -84,16 +84,16 @@ pub fn Proof() -> impl IntoView {
                 <button 
                     class="action-btn simulation-btn"
                     disabled=move || running.get()
-                    title="Measures: 1) WASM instantiation time (10 iterations averaged), 2) Pyodide cold-start (captured at page load). These are real browser measurements, not estimates."
+                    attr:data-tooltip="Measures WASM instantiation (10 iterations avg) and captures Pyodide cold-start from page load"
                     on:click=run_simulation
                 >
                     {move || if running.get() { "⏳ Measuring..." } else { "▶️ Run Simulation" }}
                 </button>
                 <p class="simulation-note">
                     {move || if simulation_ran.get() { 
-                        "✅ Measurements complete (real values below)" 
+                        "✅ Real measurements from your browser shown below" 
                     } else { 
-                        "Click to measure real performance in your browser" 
+                        "Measures: WASM instantiation time vs Pyodide runtime load time" 
                     }}
                 </p>
             </div>
