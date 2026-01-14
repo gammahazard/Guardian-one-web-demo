@@ -77,6 +77,17 @@ const MINIMAL_WASM: &[u8] = &[
 extern "C" {
     #[wasm_bindgen(js_namespace = performance)]
     fn now() -> f64;
+    
+    // Pyodide globals
+    #[wasm_bindgen(js_namespace = window, js_name = pyodideReady)]
+    static PYODIDE_READY: bool;
+    
+    #[wasm_bindgen(js_namespace = window, js_name = pyodideLoadTime)]
+    static PYODIDE_LOAD_TIME: f64;
+    
+    // Run Python code via Pyodide
+    #[wasm_bindgen(catch, js_namespace = window)]
+    async fn runPython(code: &str) -> Result<JsValue, JsValue>;
 }
 
 async fn measure_instantiate_time() -> f64 {
@@ -487,47 +498,46 @@ pub fn Demo() -> impl IntoView {
             // attack controls
             <div class="attack-section">
                 <h3>"☠️ Attack Scenarios"</h3>
+                <p class="section-desc">"Click an attack to simulate it, or run all sequentially"</p>
                 <div class="attack-buttons">
                     <button 
                         class="attack-btn"
-                        class:selected=move || selected_attack.get() == "bufferOverflow" && !is_running.get()
                         class:running=move || selected_attack.get() == "bufferOverflow" && is_running.get()
                         disabled=move || is_running.get()
                         title="Memory corruption attack - causes process crash"
-                        on:click=move |_| set_selected_attack.set("bufferOverflow".to_string())
+                        on:click=move |_| {
+                            set_selected_attack.set("bufferOverflow".to_string());
+                            trigger_attack(());
+                        }
                     >
                         "💥 Buffer Overflow"
                     </button>
                     <button 
                         class="attack-btn"
-                        class:selected=move || selected_attack.get() == "dataExfil" && !is_running.get()
                         class:running=move || selected_attack.get() == "dataExfil" && is_running.get()
                         disabled=move || is_running.get()
                         title="Attempts unauthorized network connection"
-                        on:click=move |_| set_selected_attack.set("dataExfil".to_string())
+                        on:click=move |_| {
+                            set_selected_attack.set("dataExfil".to_string());
+                            trigger_attack(());
+                        }
                     >
                         "📤 Data Exfil"
                     </button>
                     <button 
                         class="attack-btn"
-                        class:selected=move || selected_attack.get() == "pathTraversal" && !is_running.get()
                         class:running=move || selected_attack.get() == "pathTraversal" && is_running.get()
                         disabled=move || is_running.get()
                         title="Attempts to read sensitive files"
-                        on:click=move |_| set_selected_attack.set("pathTraversal".to_string())
+                        on:click=move |_| {
+                            set_selected_attack.set("pathTraversal".to_string());
+                            trigger_attack(());
+                        }
                     >
                         "📁 Path Traversal"
                     </button>
                 </div>
                 <div class="attack-actions">
-                    <button 
-                        class="action-btn attack" 
-                        title="Run selected attack scenario"
-                        disabled=move || is_running.get() 
-                        on:click=move |_| trigger_attack(())
-                    >
-                        {move || if is_running.get() { "⏳ Running..." } else { "🎯 Launch Attack" }}
-                    </button>
                     <button 
                         class="action-btn runall" 
                         title="Run all 3 attacks sequentially"
