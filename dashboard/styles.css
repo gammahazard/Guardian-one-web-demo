@@ -1536,9 +1536,6 @@ body {
 
 /* Disable tooltips on touch devices */
 @media (hover: none) and (pointer: coarse) {
-    [title] {
-        pointer-events: none;
-    }
 
     [title]:hover::after,
     [title]:hover::before {
