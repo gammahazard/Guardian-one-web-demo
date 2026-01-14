@@ -801,21 +801,21 @@ result
                                         class:active=!is_dead
                                         class:dead=is_dead
                                         class:leader=is_leader && !is_dead
-                                        title=move || if is_leader { "Leader (1.5s election if fails)" } else { "Follower" }
+                                        attr:data-tooltip=move || if is_leader { "Leader (1.5s election if fails)" } else { "Follower" }
                                     >
                                         {label}
                                     </div>
                                 }
                             }).collect_view()
                         }}
-                        <span class="memory-indicator warning" title="~45MB per Python worker (Pyodide runtime)">"Total: 135MB"</span>
+                        <span class="memory-indicator warning" attr:data-tooltip="~45MB per Python worker (Pyodide)">"Total: 135MB"</span>
                     </div>
                 </div>
                 
                 // wasm terminal - Leader/Follower pattern (like Raft)
                 <div class="terminal-panel wasm-panel">
                     <div class="terminal-header">
-                        <span class="terminal-title" title="2oo3 TMR voting similar to Raft consensus - fast failover due to 0.04ms WASM instantiation">"🦀 WASM (2oo3 TMR / Raft-like)"</span>
+                        <span class="terminal-title" attr:data-tooltip="2oo3 TMR voting with 0.04ms WASM failover">"🦀 WASM (2oo3 TMR / Raft-like)"</span>
                         <span class="terminal-status">"🟢 3/3 UP"</span>
                     </div>
                     <div class="terminal" id="wasm-terminal">
@@ -847,14 +847,14 @@ result
                                         class:healthy=states[i] == InstanceState::Healthy && !is_faulty
                                         class:faulty=is_faulty
                                         class:leader=is_leader
-                                        title=move || if is_leader { "Leader node" } else { "Follower node" }
+                                        attr:data-tooltip=move || if is_leader { "Leader (0.04ms election)" } else { "Follower" }
                                     >
                                         {label}
                                     </div>
                                 }
                             }).collect_view()
                         }}
-                        <span class="memory-indicator success" title="~2MB per WASM instance (measured)">{"Total: 6MB"}</span>
+                        <span class="memory-indicator success" attr:data-tooltip="~2MB per WASM instance">{"Total: 6MB"}</span>
                     </div>
                 </div>
             </div>

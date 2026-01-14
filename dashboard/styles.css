@@ -1107,11 +1107,73 @@ body {
     }
 }
 
-/* Instant tooltips on hover-capable devices */
-[title] {
+/* Custom instant tooltips (no delay) */
+[data-tooltip] {
     position: relative;
+    cursor: help;
 }
 
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 0.75rem;
+    background: rgba(15, 15, 20, 0.95);
+    color: var(--text-primary);
+    font-size: 0.75rem;
+    font-weight: 400;
+    white-space: nowrap;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.1s, visibility 0.1s;
+    z-index: 1000;
+    pointer-events: none;
+    max-width: 300px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.4;
+}
+
+[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Arrow for tooltip */
+[data-tooltip]::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(15, 15, 20, 0.95);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.1s, visibility 0.1s;
+    z-index: 1001;
+}
+
+[data-tooltip]:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Disable custom tooltips on touch devices */
+@media (hover: none) and (pointer: coarse) {
+
+    [data-tooltip]::after,
+    [data-tooltip]::before {
+        display: none;
+    }
+}
+
+/* Keep native title as fallback */
 @media (hover: hover) {
     [title]:hover {
         cursor: help;
