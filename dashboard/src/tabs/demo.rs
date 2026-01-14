@@ -542,6 +542,24 @@ result
                             level: "error".into(), 
                             message: format!("💥 W{} CRASHED after {:.1}ms - real Python exception!", current_active, py_elapsed)
                         });
+                        // Show voting failure - no output from crashed worker
+                        let sensor_val = 42.0 + (js_sys::Math::random() * 0.5);
+                        logs.push(LogEntry { 
+                            level: "warn".into(), 
+                            message: "[VOTE] Attempting 2oo3 consensus...".into()
+                        });
+                        logs.push(LogEntry { 
+                            level: "error".into(), 
+                            message: format!("[OUT] W0: - | W1: {:.1}°C | W2: {:.1}°C", sensor_val, sensor_val)
+                        });
+                        logs.push(LogEntry { 
+                            level: "error".into(), 
+                            message: format!("[VOTE] W{} produced NO OUTPUT (crashed) - can't compare!", current_active)
+                        });
+                        logs.push(LogEntry { 
+                            level: "error".into(), 
+                            message: "[VOTE] BLOCKED - need 3 outputs to vote, only have 2".into()
+                        });
                     });
                 }
                 Err(e) => {
@@ -555,6 +573,24 @@ result
                         logs.push(LogEntry { 
                             level: "error".into(), 
                             message: format!("💥 W{} CRASHED - process terminated!", current_active)
+                        });
+                        // Show voting failure - no output from crashed worker
+                        let sensor_val = 42.0 + (js_sys::Math::random() * 0.5);
+                        logs.push(LogEntry { 
+                            level: "warn".into(), 
+                            message: "[VOTE] Attempting 2oo3 consensus...".into()
+                        });
+                        logs.push(LogEntry { 
+                            level: "error".into(), 
+                            message: format!("[OUT] W0: - | W1: {:.1}°C | W2: {:.1}°C", sensor_val, sensor_val)
+                        });
+                        logs.push(LogEntry { 
+                            level: "error".into(), 
+                            message: format!("[VOTE] W{} produced NO OUTPUT - can't compare 3 values!", current_active)
+                        });
+                        logs.push(LogEntry { 
+                            level: "error".into(), 
+                            message: "[VOTE] BLOCKED - respawning worker to restore voting (1.5s)".into()
                         });
                     });
                 }
@@ -580,6 +616,10 @@ result
                         level: "success".into(), 
                         message: format!("[OK] W{} respawned ({}ms) - pool restored", current_active, restart_ms_copy)
                     });
+                    logs.push(LogEntry { 
+                        level: "info".into(), 
+                        message: "[VOTE] 3/3 workers ready - voting now possible".into()
+                    });
                 });
                 set_is_running.set(false);
             }, std::time::Duration::from_millis(restart_ms as u64));
@@ -600,6 +640,8 @@ result
             
             // Check if faulty instance is the leader - elect new leader
             let current_leader = leader_id.get();
+            // Generate simulated sensor value for demonstration
+            let sensor_val = 42.0 + (js_sys::Math::random() * 0.5);
             if faulty_idx == current_leader {
                 // Elect first healthy node as new leader
                 let new_leader = healthy[0];
@@ -609,16 +651,18 @@ result
                     logs.push(LogEntry { level: "info".into(), message: "[WIT] attack-surface capability not imported → syscall denied".into() });
                     logs.push(LogEntry { level: "warn".into(), message: format!("[RAFT] Leader I{} failed! Electing new leader...", faulty_idx) });
                     logs.push(LogEntry { level: "success".into(), message: format!("[RAFT] I{} elected as new leader in 0.04ms", new_leader) });
-                    logs.push(LogEntry { level: "info".into(), message: format!("[VOTE] I{:?} agree, I{} disagrees", healthy, faulty_idx) });
-                    logs.push(LogEntry { level: "success".into(), message: "[VOTE] 2/3 majority - attack rejected safely".into() });
+                    // Show actual output comparison
+                    logs.push(LogEntry { level: "info".into(), message: format!("[OUT] I{}: TRAP | I{}: {:.1}°C | I{}: {:.1}°C", faulty_idx, healthy[0], sensor_val, healthy[1], sensor_val) });
+                    logs.push(LogEntry { level: "success".into(), message: format!("[VOTE] 2/3 outputs agree ({:.1}°C) - using majority value", sensor_val) });
                 });
             } else {
                 set_wasm_logs.update(|logs| {
                     logs.push(LogEntry { level: "warn".into(), message: format!("[TRAP] I{}: {}", faulty_idx, wasm_trap) });
                     logs.push(LogEntry { level: "info".into(), message: "[WIT] attack-surface capability not imported → syscall denied".into() });
-                    logs.push(LogEntry { level: "info".into(), message: format!("[VOTE] I{:?} agree, I{} disagrees", healthy, faulty_idx) });
-                    logs.push(LogEntry { level: "success".into(), message: "[VOTE] 2/3 majority - attack rejected safely".into() });
-                    logs.push(LogEntry { level: "success".into(), message: "[OK] Zero downtime - 2/3 continues processing".into() });
+                    // Show actual output comparison
+                    logs.push(LogEntry { level: "info".into(), message: format!("[OUT] I{}: {:.1}°C | I{}: {:.1}°C | I{}: TRAP", healthy[0], sensor_val, healthy[1], sensor_val, faulty_idx) });
+                    logs.push(LogEntry { level: "success".into(), message: format!("[VOTE] 2/3 outputs agree ({:.1}°C) - using majority value", sensor_val) });
+                    logs.push(LogEntry { level: "success".into(), message: "[OK] Zero downtime - continues with valid output".into() });
                 });
             }
             
