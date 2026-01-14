@@ -278,6 +278,10 @@ body {
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
+.attack-btn.run-all {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+}
+
 .attack-result {
     margin-top: 1rem;
     padding: 1rem;

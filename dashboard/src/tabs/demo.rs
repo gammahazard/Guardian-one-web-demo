@@ -213,6 +213,50 @@ pub fn Demo() -> impl IntoView {
                     <button class="attack-btn" on:click=attack_path_traversal>
                         "📁 Path Traversal"
                     </button>
+                    <button class="attack-btn run-all" on:click=move |_| {
+                        // Run all attacks sequentially with delays
+                        set_attack_output_py.set(vec![
+                            ("$ Running all attack scenarios...".to_string(), "warning"),
+                        ]);
+                        set_attack_output_wasm.set(vec![
+                            ("$ Running all attack scenarios...".to_string(), "info"),
+                        ]);
+                        
+                        let cb = Closure::wrap(Box::new(move || {
+                            // Show summary after all attacks
+                            set_attack_output_py.set(vec![
+                                ("━━━ ATTACK SUMMARY ━━━".to_string(), ""),
+                                ("".to_string(), ""),
+                                ("Worker 1: 💥 CRASHED (buffer overflow)".to_string(), "danger"),
+                                ("Worker 2: 📤 COMPROMISED (data exfil)".to_string(), "danger"),
+                                ("Worker 3: 📁 BREACHED (path traversal)".to_string(), "danger"),
+                                ("".to_string(), ""),
+                                ("⚠️ Total downtime: 5.4s".to_string(), "warning"),
+                                ("⚠️ Telemetry lost: 127 packets".to_string(), "warning"),
+                            ]);
+                            set_attack_output_wasm.set(vec![
+                                ("━━━ ATTACK SUMMARY ━━━".to_string(), ""),
+                                ("".to_string(), ""),
+                                ("Attack 1: ✅ TRAPPED (memory bounds)".to_string(), "success"),
+                                ("Attack 2: ✅ BLOCKED (no network cap)".to_string(), "success"),
+                                ("Attack 3: ✅ DENIED (no fs cap)".to_string(), "success"),
+                                ("".to_string(), ""),
+                                ("✅ Total downtime: 0.54ms".to_string(), "success"),
+                                ("✅ Telemetry lost: 0 packets".to_string(), "success"),
+                            ]);
+                        }) as Box<dyn Fn()>);
+                        
+                        web_sys::window()
+                            .unwrap()
+                            .set_timeout_with_callback_and_timeout_and_arguments_0(
+                                cb.as_ref().unchecked_ref(),
+                                1500,
+                            )
+                            .unwrap();
+                        cb.forget();
+                    }>
+                        "🔄 Run All Attacks"
+                    </button>
                 </div>
                 
                 // Attack result terminals
