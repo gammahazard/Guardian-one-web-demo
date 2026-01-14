@@ -84,6 +84,7 @@ pub fn Proof() -> impl IntoView {
                 <button 
                     class="action-btn simulation-btn"
                     disabled=move || running.get()
+                    title="Measures: 1) WASM instantiation time (10 iterations averaged), 2) Pyodide cold-start (captured at page load). These are real browser measurements, not estimates."
                     on:click=run_simulation
                 >
                     {move || if running.get() { "⏳ Measuring..." } else { "▶️ Run Simulation" }}

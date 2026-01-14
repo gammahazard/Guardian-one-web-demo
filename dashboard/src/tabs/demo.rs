@@ -57,6 +57,42 @@ fn get_attack_config(attack: &str) -> AttackConfig {
 }
 
 // ============================================================================
+// wit contract code for modal display
+// ============================================================================
+
+const WIT_CODE_EXCERPT: &str = r#"// wit/attacks.wit - WASI 0.2 Component Model
+package reliability-triad:attacks@0.1.0;
+
+/// Capabilities DENIED to untrusted components
+interface attack-surface {
+    // Memory allocation - blocked if exceeds limit
+    record allocation-request { size-bytes: u64 }
+    enum allocation-error { limit-exceeded, denied-by-policy }
+    
+    // Network access - blocked if capability not granted
+    record socket-request { address: string, port: u16 }
+    enum network-error { capability-not-granted }
+    
+    // Filesystem - blocked if path not in allowed list
+    record file-request { path: string }
+    enum filesystem-error { capability-not-granted, path-not-allowed }
+}
+
+/// What legitimate sensor components CAN import
+interface sensor-capabilities {
+    allocate-buffer: func(size: u64) -> result<u64, string>;
+    read-sensor: func(channel: u8) -> result<f64, string>;
+    publish-telemetry: func(topic: string, data: list<u8>);
+}
+
+/// 2oo3 TMR voting interface
+interface tmr-voting {
+    vote: func(outputs: list<u8>) -> vote-result;
+    rebuild-instance: func(id: u8) -> result<u64, string>;
+}
+"#;
+
+// ============================================================================
 // python attack code (executed via pyodide for real exceptions)
 // ============================================================================
 
@@ -270,6 +306,7 @@ pub fn Demo() -> impl IntoView {
         InstanceState::Healthy,
     ]);
     let (faulty_instance, set_faulty_instance) = create_signal(Option::<u8>::None);
+    let (leader_id, set_leader_id) = create_signal(0u8); // Current leader (changes if leader fails)
     
     // ========================================================================
     // python worker state
@@ -277,6 +314,11 @@ pub fn Demo() -> impl IntoView {
     let (python_workers, set_python_workers) = create_signal([true, true, true]);
     let (python_active_worker, set_python_active_worker) = create_signal(0u8);
     let (python_restarting, set_python_restarting) = create_signal(false);
+    
+    // ========================================================================
+    // wit modal state
+    // ========================================================================
+    let (wit_modal_open, set_wit_modal_open) = create_signal(false);
     
     // ========================================================================
     // metrics tracking
@@ -556,12 +598,29 @@ result
             
             let healthy: Vec<u8> = (0..3).filter(|&i| i != faulty_idx).collect();
             
-            set_wasm_logs.update(|logs| {
-                logs.push(LogEntry { level: "warn".into(), message: format!("[TRAP] I{}: {}", faulty_idx, wasm_trap) });
-                logs.push(LogEntry { level: "info".into(), message: format!("[VOTE] I{:?} agree, I{} disagrees", healthy, faulty_idx) });
-                logs.push(LogEntry { level: "success".into(), message: "[VOTE] 2/3 majority - attack rejected safely".into() });
-                logs.push(LogEntry { level: "success".into(), message: "[OK] Zero downtime - 2/3 continues processing".into() });
-            });
+            // Check if faulty instance is the leader - elect new leader
+            let current_leader = leader_id.get();
+            if faulty_idx == current_leader {
+                // Elect first healthy node as new leader
+                let new_leader = healthy[0];
+                set_leader_id.set(new_leader);
+                set_wasm_logs.update(|logs| {
+                    logs.push(LogEntry { level: "warn".into(), message: format!("[TRAP] I{}: {}", faulty_idx, wasm_trap) });
+                    logs.push(LogEntry { level: "info".into(), message: "[WIT] attack-surface capability not imported → syscall denied".into() });
+                    logs.push(LogEntry { level: "warn".into(), message: format!("[RAFT] Leader I{} failed! Electing new leader...", faulty_idx) });
+                    logs.push(LogEntry { level: "success".into(), message: format!("[RAFT] I{} elected as new leader in 0.04ms", new_leader) });
+                    logs.push(LogEntry { level: "info".into(), message: format!("[VOTE] I{:?} agree, I{} disagrees", healthy, faulty_idx) });
+                    logs.push(LogEntry { level: "success".into(), message: "[VOTE] 2/3 majority - attack rejected safely".into() });
+                });
+            } else {
+                set_wasm_logs.update(|logs| {
+                    logs.push(LogEntry { level: "warn".into(), message: format!("[TRAP] I{}: {}", faulty_idx, wasm_trap) });
+                    logs.push(LogEntry { level: "info".into(), message: "[WIT] attack-surface capability not imported → syscall denied".into() });
+                    logs.push(LogEntry { level: "info".into(), message: format!("[VOTE] I{:?} agree, I{} disagrees", healthy, faulty_idx) });
+                    logs.push(LogEntry { level: "success".into(), message: "[VOTE] 2/3 majority - attack rejected safely".into() });
+                    logs.push(LogEntry { level: "success".into(), message: "[OK] Zero downtime - 2/3 continues processing".into() });
+                });
+            }
             
             set_wasm_rejected.update(|n| *n += 1);
             
@@ -706,12 +765,12 @@ result
             
             // terminals side by side
             <div class="terminals-container">
-                // python terminal
+                // python terminal - 3 parallel workers
                 <div class="terminal-panel python-panel">
                     <div class="terminal-header">
-                        <span class="terminal-title">"🐍 Python (multiprocessing)"</span>
+                        <span class="terminal-title" title="Python multiprocessing.Pool with 3 workers - parallel execution but high memory (~135MB for 3 workers)">"🐍 Python (3 workers parallel)"</span>
                         <span class="terminal-status" class:crashed=move || python_restarting.get()>
-                            {move || if python_restarting.get() { "⏳ SPAWNING" } else { "🟢 UP" }}
+                            {move || if python_restarting.get() { "⏳ RESPAWNING" } else { "🟢 3/3 UP" }}
                         </span>
                     </div>
                     <div class="terminal" id="python-terminal">
@@ -726,34 +785,38 @@ result
                             }
                         }}
                     </div>
-                    // worker boxes
+                    // worker boxes with memory indicator - L/F/F pattern like WASM
                     <div class="workers-panel">
-                        <span class="workers-label">"Workers:"</span>
+                        <span class="workers-label">"Nodes:"</span>
                         {move || {
                             let workers = python_workers.get();
                             let active = python_active_worker.get();
                             (0..3).map(|i| {
-                                let is_active = i == active as usize && workers[i];
                                 let is_dead = !workers[i];
+                                // First alive worker is "leader" for Python consensus
+                                let is_leader = (i as u8) == active;
+                                let label = if is_leader { "L" } else { "F" };
                                 view! {
                                     <div class="worker-box"
-                                        class:active=is_active
+                                        class:active=!is_dead
                                         class:dead=is_dead
-                                        class:idle=!is_active && !is_dead
+                                        class:leader=is_leader && !is_dead
+                                        title=move || if is_leader { "Leader (1.5s election if fails)" } else { "Follower" }
                                     >
-                                        {format!("W{}", i)}
+                                        {label}
                                     </div>
                                 }
                             }).collect_view()
                         }}
+                        <span class="memory-indicator warning" title="~45MB per Python worker (Pyodide runtime)">"Total: 135MB"</span>
                     </div>
                 </div>
                 
-                // wasm terminal
+                // wasm terminal - Leader/Follower pattern (like Raft)
                 <div class="terminal-panel wasm-panel">
                     <div class="terminal-header">
-                        <span class="terminal-title">"🦀 WASM (2oo3 TMR)"</span>
-                        <span class="terminal-status">"🟢 UP"</span>
+                        <span class="terminal-title" title="2oo3 TMR voting similar to Raft consensus - fast failover due to 0.04ms WASM instantiation">"🦀 WASM (2oo3 TMR / Raft-like)"</span>
+                        <span class="terminal-status">"🟢 3/3 UP"</span>
                     </div>
                     <div class="terminal" id="wasm-terminal">
                         {move || {
@@ -767,24 +830,31 @@ result
                             }
                         }}
                     </div>
-                    // instance boxes
-                    <div class="instances-panel" title="2oo3 is practical with WASM: 0.04ms instantiation, ~2MB per instance. Python 2oo3 would need 3x ~45MB workers with 1.5s respawn.">
-                        <span class="instances-label">"2oo3 TMR:"</span>
+                    // instance boxes - Leader (L) + Followers (F) like Raft
+                    <div class="instances-panel" title="WASM enables fast consensus: Leader re-election takes 0.04ms (vs 1.5s Python). 2oo3 voting rejects faulty instance, system continues.">
+                        <span class="instances-label">"Nodes:"</span>
                         {move || {
                             let states = instance_states.get();
                             let faulty = faulty_instance.get();
+                            let current_leader = leader_id.get();
                             (0..3).map(|i| {
                                 let is_faulty = faulty == Some(i as u8);
+                                // Dynamic leader - first healthy node or elected leader
+                                let is_leader = (i as u8) == current_leader;
+                                let label = if is_leader { "L" } else { "F" };
                                 view! {
                                     <div class="instance-box"
                                         class:healthy=states[i] == InstanceState::Healthy && !is_faulty
                                         class:faulty=is_faulty
+                                        class:leader=is_leader
+                                        title=move || if is_leader { "Leader node" } else { "Follower node" }
                                     >
-                                        {format!("I{}", i)}
+                                        {label}
                                     </div>
                                 }
                             }).collect_view()
                         }}
+                        <span class="memory-indicator success" title="~2MB per WASM instance (measured)">{"Total: 6MB"}</span>
                     </div>
                 </div>
             </div>
@@ -888,19 +958,42 @@ result
                     </button>
                 </div>
                 
-                // Info box explaining browser vs wasmtime
+                // Info box explaining WASI 0.2 and browser vs wasmtime
                 <div class="info-box">
-                    <h4>"ℹ️ About This Demo"</h4>
-                    <p>"This browser demo "<strong>"demonstrates concepts"</strong>" using Pyodide (Python) and WebAssembly."</p>
+                    <h4>"ℹ️ About This Demo — WASI 0.2 Component Model"</h4>
+                    <p>"This demonstrates "<strong>"WASI 0.2's deny-by-default security"</strong>". Components have "<em>"zero capabilities"</em>" unless explicitly granted via WIT contracts."</p>
                     <ul>
-                        <li><strong>"Python attacks:"</strong>" Run real code via Pyodide, producing genuine exceptions"</li>
-                        <li><strong>"WASM traps:"</strong>" Simulated to show what wasmtime enforces via WIT contracts"</li>
-                        <li><strong>"2oo3 TMR:"</strong>" Visualizes Triple Modular Redundancy voting pattern"</li>
+                        <li><strong>"🐍 Python (via Pyodide):"</strong>" Real code execution—exceptions are genuine (IndexError, socket.error, OSError)"</li>
+                        <li><strong>"🦀 WASM (simulated):"</strong>" Traps show what wasmtime enforces—attacks fail because capabilities weren't granted"</li>
+                        <li>
+                            <strong>"🔒 WIT Contract:"</strong>" "
+                            <a class="wit-link" href="#" on:click=move |e: web_sys::MouseEvent| {
+                                e.prevent_default();
+                                set_wit_modal_open.set(true);
+                            }>"View wit/attacks.wit"</a>
+                            " (same file works in wasmtime)"
+                        </li>
                     </ul>
-                    <p class="hardware-note">"🔧 "<strong>"In hardware deployment:"</strong>" wasmtime enforces WIT capability contracts at component instantiation. The same WIT file ("<code>"wit/attacks.wit"</code>") defines what's denied."</p>
-                    <p class="raft-note">"🗳️ "<strong>"Raft Consensus:"</strong>" Enables leader election and log replication across distributed nodes. WASM makes Raft more resilient—crashed nodes rebuild in 0.04ms vs 1.5s for Python processes."</p>
+                    <p class="hardware-note">"🔧 "<strong>"Browser vs Hardware:"</strong>" This demo simulates WASI behavior. In wasmtime/hardware, WIT contracts are enforced at instantiation—the component literally cannot call denied syscalls."</p>
                 </div>
             </div>
+            
+            // WIT Code Modal
+            {move || if wit_modal_open.get() {
+                view! {
+                    <div class="modal-overlay" on:click=move |_| set_wit_modal_open.set(false)>
+                        <div class="modal-content" on:click=|e: web_sys::MouseEvent| e.stop_propagation()>
+                            <div class="modal-header">
+                                <span class="modal-title">"📄 wit/attacks.wit"</span>
+                                <button class="modal-close" on:click=move |_| set_wit_modal_open.set(false)>"×"</button>
+                            </div>
+                            <pre class="wit-code">{WIT_CODE_EXCERPT}</pre>
+                        </div>
+                    </div>
+                }.into_view()
+            } else {
+                view! { <div></div> }.into_view()
+            }}
         </div>
     }
 }
