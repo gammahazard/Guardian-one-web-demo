@@ -2,6 +2,7 @@
     "$schema": "https://openapi.vercel.sh/vercel.json",
     "buildCommand": ". $HOME/.cargo/env && cd dashboard && trunk build --release",
     "outputDirectory": "dashboard/dist",
+    "ignoreCommand": "! git diff --name-only HEAD^ HEAD | grep -v '\\.md$'",
     "installCommand": "curl https://sh.rustup.rs -sSf | sh -s -- -y && . $HOME/.cargo/env && rustup target add wasm32-unknown-unknown && cargo install trunk wasm-bindgen-cli",
     "framework": null,
     "headers": [
