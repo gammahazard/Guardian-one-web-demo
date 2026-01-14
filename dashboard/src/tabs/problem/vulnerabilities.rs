@@ -24,6 +24,7 @@ const CVE_DESKTOP_URL: &str = "https://nvd.nist.gov/vuln/detail/CVE-2025-9074";
 const STAT1_URL: &str = "https://socradar.io/blog/cisa-industrial-control-systems-ics-advisories-2025/";
 const STAT2_URL: &str = "https://www.securityweek.com/670-ics-vulnerabilities-disclosed-by-cisa-in-first-half-of-2023-analysis/";
 const STAT3_URL: &str = "https://industrialcyber.co/industrial-cyber-attacks/new-ics-vulnerabilities-report-highlights-trends-and-increases-in-cves-despite-fewer-cisa-advisories/";
+const STAT4_URL: &str = "https://media.txone.com/prod/uploads/2024/02/TXOne-Annual-Report-OT-ICS-Cybersecurity-2023-v.pdf";
 
 /// renders the vulnerabilities section with CVE cards and ICS stats
 #[component]
@@ -77,9 +78,15 @@ pub fn VulnerabilitiesSection() -> impl IntoView {
                     />
                     <StatCard 
                         value="44%"
-                        label="of ICS CVEs target manufacturing sector"
-                        source="IndustrialCyber 2023"
+                        label="of ICS vulnerabilities are in manufacturing equipment"
+                        source="ICS Advisory Project 2023"
                         url=STAT3_URL
+                    />
+                    <StatCard 
+                        value="97%"
+                        label="of IT incidents eventually impact OT environments"
+                        source="TXOne 2023 Report"
+                        url=STAT4_URL
                     />
                 </div>
             </div>
