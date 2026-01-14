@@ -264,6 +264,7 @@ pub fn Demo() -> impl IntoView {
     // pyodide/python metrics (real measurements)
     // ========================================================================
     let (pyodide_ready, set_pyodide_ready) = create_signal(false);
+    let (pyodide_load_ms, set_pyodide_load_ms) = create_signal(0.0f64); // Real Pyodide cold-start time
     let (python_exec_ms, set_python_exec_ms) = create_signal(0.0f64);
     let (wasm_exec_ms, set_wasm_exec_ms) = create_signal(0.0f64);
     let (sensor_running, set_sensor_running) = create_signal(false);
@@ -322,16 +323,24 @@ pub fn Demo() -> impl IntoView {
         }
     });
     
-    // Check if Pyodide is ready (polled periodically)
+    // Check if Pyodide is ready (polled periodically) and capture real load time
     create_effect(move |_| {
         if !pyodide_ready.get() {
             // Poll every 500ms to check if Pyodide is loaded
             set_timeout(move || {
-                if js_sys::Reflect::get(&web_sys::window().unwrap(), &"pyodideReady".into())
+                let window = web_sys::window().unwrap();
+                if js_sys::Reflect::get(&window, &"pyodideReady".into())
                     .map(|v| v.as_bool().unwrap_or(false))
                     .unwrap_or(false)
                 {
                     set_pyodide_ready.set(true);
+                    
+                    // Capture the real Pyodide load time (cold-start measurement)
+                    if let Ok(load_time) = js_sys::Reflect::get(&window, &"pyodideLoadTime".into()) {
+                        if let Some(ms) = load_time.as_f64() {
+                            set_pyodide_load_ms.set(ms);
+                        }
+                    }
                 }
             }, std::time::Duration::from_millis(500));
         }
@@ -637,18 +646,26 @@ result
                         <span class="metric-label">"WASM Instantiate (real)"</span>
                         <span class="metric-value">{move || format!("{:.2}ms", wasm_instantiate_ms.get())}</span>
                     </div>
-                    <div class="metric-item" title="Typical Python worker spawn time">
-                        <span class="metric-label">"Python Worker Spawn"</span>
-                        <span class="metric-value warning">"~1800ms"</span>
+                    <div class="metric-item" title="Real Pyodide cold-start time measured at page load">
+                        <span class="metric-label">"Python Cold-Start (real)"</span>
+                        <span class="metric-value warning">{move || {
+                            let ms = pyodide_load_ms.get();
+                            if ms > 0.0 {
+                                format!("{:.0}ms", ms)
+                            } else {
+                                "Loading...".to_string()
+                            }
+                        }}</span>
                     </div>
                     <div class="metric-item speedup">
                         <span class="metric-label">"Speedup"</span>
                         <span class="metric-value">{move || {
                             let wasm = wasm_instantiate_ms.get();
-                            if wasm > 0.0 {
-                                format!("{:.0}x faster", 1800.0 / wasm)
+                            let python = pyodide_load_ms.get();
+                            if wasm > 0.0 && python > 0.0 {
+                                format!("{:.0}x faster", python / wasm)
                             } else {
-                                "∞x faster".to_string()
+                                "—".to_string()
                             }
                         }}</span>
                     </div>
