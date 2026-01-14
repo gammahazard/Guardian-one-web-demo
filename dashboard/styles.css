@@ -57,6 +57,21 @@ body {
     margin-top: 0.5rem;
 }
 
+/* Footer */
+.footer {
+    padding: 1.5rem;
+    text-align: center;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.wasi-highlight {
+    color: var(--accent-primary);
+    font-weight: 600;
+}
+
 /* Tab Navigation */
 .tabs {
     display: flex;

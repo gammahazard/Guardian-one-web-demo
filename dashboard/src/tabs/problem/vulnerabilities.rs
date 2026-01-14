@@ -73,7 +73,7 @@ pub fn VulnerabilitiesSection() -> impl IntoView {
             <div class="wasm-contrast">
                 <p>
                     <strong>"With WASM: "</strong>
-                    "Container escapes are architecturally impossible. There's no host kernel to escape to — the sandbox is at the instruction level, not process level."
+                    "The attack surface shifts from the kernel to the runtime. No syscalls, no filesystem, no network — unless explicitly granted via capability handles. The sandbox is at the instruction level."
                 </p>
             </div>
         </div>

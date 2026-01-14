@@ -50,7 +50,7 @@ pub fn ComparisonSection() -> impl IntoView {
                     property="Container Escape"
                     docker="CVEs every year"
                     docker_bad=true
-                    wasm="Architecturally impossible"
+                    wasm="Reduced surface (runtime only)"
                     wasm_good=true
                 />
                 <ComparisonRow 

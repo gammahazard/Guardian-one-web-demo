@@ -64,7 +64,7 @@ pub fn App() -> impl IntoView {
             </main>
 
             <footer class="footer">
-                <p>"Guardian One Foundation • Powered by "<a href="https://wasi.dev/" target="_blank" rel="noopener">"WASI 0.2"</a></p>
+                <p>"WASI/WASM Industrial Web Demo • Powered by "<span class="wasi-highlight">"WASI 0.2"</span></p>
             </footer>
         </div>
     }
