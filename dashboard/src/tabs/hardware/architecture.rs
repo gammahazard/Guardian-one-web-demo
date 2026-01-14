@@ -1,5 +1,5 @@
-// what: purdue model architecture visualization component with tooltips
-// why: shows iec 62443 zones with actual hardware placement and educational tooltips
+// what: purdue model architecture visualization component with click-to-toggle tooltips
+// why: shows iec 62443 zones with actual hardware placement and mobile-friendly tooltips
 // relations: used by hardware/component.rs as one of four sub-sections
 
 use leptos::*;
@@ -16,7 +16,7 @@ pub fn ArchitectureSection() -> impl IntoView {
     view! {
         <div class="architecture-section">
             <h3>"Purdue Model — IEC 62443 Zones"</h3>
-            <p class="section-hint">"💡 Hover over each level for details"</p>
+            <p class="section-hint">"💡 Tap ⓘ for details"</p>
             
             <div class="purdue-diagram">
                 // level 3: operations management (enterprise it)
@@ -44,11 +44,11 @@ pub fn ArchitectureSection() -> impl IntoView {
                 >
                     // wit and wasm technology badges
                     <div class="tech-badges">
-                        <div class="tech-badge" title="WebAssembly sandboxed runtime - instant cold start, memory-safe execution">
+                        <div class="tech-badge">
                             <img src="diagrams/wasm_icon.png" alt="WASM" class="tech-icon" />
                             <span>"WASM Runtime"</span>
                         </div>
-                        <div class="tech-badge" title="WebAssembly Interface Types - explicit capability grants, deny-by-default security">
+                        <div class="tech-badge">
                             <img src="diagrams/wit_icon.png" alt="WIT" class="tech-icon" />
                             <span>"WIT Contract"</span>
                         </div>
@@ -96,7 +96,7 @@ pub fn ArchitectureSection() -> impl IntoView {
     }
 }
 
-/// purdue level wrapper with tooltip support
+/// purdue level wrapper with click-to-toggle tooltip
 #[component]
 fn PurdueLevel(
     level: &'static str,
@@ -105,15 +105,32 @@ fn PurdueLevel(
     class: &'static str,
     children: Children,
 ) -> impl IntoView {
-    let full_class = format!("purdue-level has-tooltip {}", class);
+    let (show_tooltip, set_show_tooltip) = create_signal(false);
+    let full_class = format!("purdue-level {}", class);
+    
     view! {
-        <div class={full_class} title={tooltip}>
+        <div class={full_class}>
             <div class="level-header">
                 <span class="level-badge">{level}</span>
                 <span class="level-name">{name}</span>
-                <span class="info-icon">"ⓘ"</span>
+                <button 
+                    class="info-btn"
+                    on:click=move |_| set_show_tooltip.update(|v| *v = !*v)
+                >
+                    "ⓘ"
+                </button>
             </div>
-            <div class="tooltip-content">{tooltip}</div>
+            <Show when=move || show_tooltip.get()>
+                <div class="tooltip-popup">
+                    <div class="tooltip-content">{tooltip}</div>
+                    <button 
+                        class="tooltip-close"
+                        on:click=move |_| set_show_tooltip.set(false)
+                    >
+                        "✕"
+                    </button>
+                </div>
+            </Show>
             {children()}
         </div>
     }

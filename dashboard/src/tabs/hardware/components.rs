@@ -1,5 +1,5 @@
-// what: hardware component showcase section with tooltips
-// why: displays all physical components grouped by purdue level with educational tooltips
+// what: hardware component showcase section with click-to-toggle tooltips
+// why: displays all physical components grouped by purdue level with mobile-friendly tooltips
 // relations: used by hardware/component.rs, lists components organized by architecture level
 
 use leptos::*;
@@ -17,7 +17,7 @@ pub fn ComponentsSection() -> impl IntoView {
     view! {
         <div class="components-section">
             <h3>"Hardware Components"</h3>
-            <p class="section-hint">"💡 Organized by Purdue Level — hover for details"</p>
+            <p class="section-hint">"💡 Organized by Purdue Level — tap ⓘ for details"</p>
             
             <div class="components-grid">
                 // level 0: field devices first (bottom of purdue model)
@@ -29,19 +29,16 @@ pub fn ComponentsSection() -> impl IntoView {
                         name="BME280 Sensor" 
                         role="Temp/Humidity/Pressure (I2C)" 
                         zone="Level 0"
-                        tooltip="Environmental sensor providing real-time temperature, humidity, and barometric pressure readings via I2C bus."
                     />
                     <ComponentCard 
                         name="SainSmart Relay" 
                         role="GPIO Actuator Control" 
                         zone="Level 0"
-                        tooltip="Optically-isolated relay module for switching 120V industrial loads safely from 3.3V GPIO signals."
                     />
                     <ComponentCard 
                         name="Industrial Fan (120V)" 
                         role="Physical Actuator" 
                         zone="Level 0"
-                        tooltip="Real industrial-grade fan demonstrating actual process control, not a simulation."
                     />
                 </ComponentCategory>
                 
@@ -54,13 +51,11 @@ pub fn ComponentsSection() -> impl IntoView {
                         name="Siemens S7-1200 PLC" 
                         role="Modbus Master Controller" 
                         zone="Level 1"
-                        tooltip="Industry-standard programmable logic controller. Programmed via TIA Portal, communicates with Guardian Cluster over Modbus RTU."
                     />
                     <ComponentCard 
                         name="Mean Well 24V PSU" 
                         role="PLC Power Supply" 
                         zone="Level 1"
-                        tooltip="Industrial-grade 24VDC power supply for PLC and field devices. DIN-rail mounted."
                     />
                 </ComponentCategory>
                 
@@ -73,13 +68,11 @@ pub fn ComponentsSection() -> impl IntoView {
                         name="Raspberry Pi 4 (4GB)" 
                         role="Cluster Leader / Gateway" 
                         zone="Level 2"
-                        tooltip="Raft consensus leader node. Hosts the WASM runtime and WIT contract validator. Bridges enterprise IT to industrial control."
                     />
                     <ComponentCard 
                         name="Pi Zero 2W ×2" 
                         role="Raft Followers / TMR Voters" 
                         zone="Level 2"
-                        tooltip="Two follower nodes for 2-out-of-3 Triple Modular Redundancy voting. If one fails, the cluster continues operating."
                     />
                 </ComponentCategory>
                 
@@ -92,13 +85,11 @@ pub fn ComponentsSection() -> impl IntoView {
                         name="QNAP NAS" 
                         role="Historian + Raft Storage" 
                         zone="Level 3"
-                        tooltip="Stores time-series data, Raft log persistence, and provides network storage for the cluster."
                     />
                     <ComponentCard 
                         name="UniFi Switch" 
                         role="Industrial Zone Segmentation" 
                         zone="Network"
-                        tooltip="Managed switch providing VLAN isolation between enterprise IT and industrial control networks."
                     />
                 </ComponentCategory>
                 
@@ -111,19 +102,16 @@ pub fn ComponentsSection() -> impl IntoView {
                         name="WS2812B LED Strip" 
                         role="TMR Voting Status" 
                         zone="Visual"
-                        tooltip="NeoPixel strip showing real-time TMR voting status: green=consensus, yellow=degraded, red=fault."
                     />
                     <ComponentCard 
                         name="RGB OLED Display" 
                         role="HMI Dashboard" 
                         zone="Visual"
-                        tooltip="Small OLED screen displaying current sensor values, cluster health, and Raft leader status."
                     />
                     <ComponentCard 
                         name="USB-RS485 Adapter" 
                         role="Modbus RTU Bridge" 
                         zone="Protocol"
-                        tooltip="Serial-to-RS485 adapter enabling Modbus RTU communication between Pi and PLC."
                     />
                 </ComponentCategory>
             </div>
@@ -131,20 +119,37 @@ pub fn ComponentsSection() -> impl IntoView {
     }
 }
 
-/// category wrapper for grouping related components with tooltip
+/// category wrapper with click-to-toggle tooltip
 #[component]
 fn ComponentCategory(
     title: &'static str, 
     tooltip: &'static str,
     children: Children,
 ) -> impl IntoView {
+    let (show_tooltip, set_show_tooltip) = create_signal(false);
+    
     view! {
-        <div class="component-category has-tooltip" title={tooltip}>
+        <div class="component-category">
             <h4>
                 {title}
-                <span class="info-icon">"ⓘ"</span>
+                <button 
+                    class="info-btn"
+                    on:click=move |_| set_show_tooltip.update(|v| *v = !*v)
+                >
+                    "ⓘ"
+                </button>
             </h4>
-            <div class="tooltip-content">{tooltip}</div>
+            <Show when=move || show_tooltip.get()>
+                <div class="tooltip-popup">
+                    <div class="tooltip-content">{tooltip}</div>
+                    <button 
+                        class="tooltip-close"
+                        on:click=move |_| set_show_tooltip.set(false)
+                    >
+                        "✕"
+                    </button>
+                </div>
+            </Show>
             <div class="component-list">
                 {children()}
             </div>
@@ -152,16 +157,15 @@ fn ComponentCategory(
     }
 }
 
-/// individual component card with name, role, zone, and tooltip
+/// individual component card with name, role, and zone
 #[component]
 fn ComponentCard(
     name: &'static str, 
     role: &'static str, 
     zone: &'static str,
-    tooltip: &'static str,
 ) -> impl IntoView {
     view! {
-        <div class="component-card has-tooltip" title={tooltip}>
+        <div class="component-card">
             <div class="card-name">{name}</div>
             <div class="card-role">{role}</div>
             <span class="card-zone">{zone}</span>

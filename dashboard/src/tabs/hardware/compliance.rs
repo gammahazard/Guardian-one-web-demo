@@ -1,5 +1,5 @@
-// what: iec 62443 compliance visualization section with tooltips
-// why: demonstrates understanding of industrial security standards with educational tooltips
+// what: iec 62443 compliance visualization section with click-to-toggle tooltips
+// why: demonstrates understanding of industrial security standards with mobile-friendly tooltips
 // relations: used by hardware/component.rs, shows security architecture
 
 use leptos::*;
@@ -9,13 +9,13 @@ const ZONE3_TOOLTIP: &str = "Enterprise IT Zone (Low Risk): Contains monitoring 
 const ZONE2_TOOLTIP: &str = "Guardian Cluster DMZ: The WASM runtime acts as a security boundary. Workers are compiled to WebAssembly and execute in a sandboxed environment. WASI (WebAssembly System Interface) provides capability-based security: each module must be explicitly granted access to specific resources like Modbus, GPIO, or Network. This is fundamentally different from containers which inherit host kernel trust.";
 const ZONE1_TOOLTIP: &str = "Industrial Control Zone (High Risk): Contains the PLC and field devices. Only validated commands from Zone 2 can reach this zone via Modbus RTU.";
 
-/// renders iec 62443 zone and conduit model diagram with tooltips
+/// renders iec 62443 zone and conduit model diagram with click-to-toggle tooltips
 #[component]
 pub fn ComplianceSection() -> impl IntoView {
     view! {
         <div class="compliance-section">
             <h3>"IEC 62443 Zone & Conduit Model"</h3>
-            <p class="section-hint">"💡 Hover over each zone for security details"</p>
+            <p class="section-hint">"💡 Tap ⓘ for security details"</p>
             
             <div class="compliance-diagram">
                 // zone 3: enterprise it (green - low risk)
@@ -26,7 +26,7 @@ pub fn ComplianceSection() -> impl IntoView {
                     tooltip=ZONE3_TOOLTIP
                 />
                 
-                <div class="conduit" title="Encrypted TLS connection for historian data upload">
+                <div class="conduit">
                     "┃ Encrypted TLS (Historian API) ┃"
                 </div>
                 
@@ -38,7 +38,7 @@ pub fn ComplianceSection() -> impl IntoView {
                     tooltip=ZONE2_TOOLTIP
                 />
                 
-                <div class="conduit" title="WIT contract validation - only explicitly granted capabilities pass through">
+                <div class="conduit">
                     "┃ WIT Contract (Modbus only) ┃"
                 </div>
                 
@@ -59,7 +59,7 @@ pub fn ComplianceSection() -> impl IntoView {
     }
 }
 
-/// security zone card with color-coded risk level and tooltip
+/// security zone card with click-to-toggle tooltip
 #[component]
 fn SecurityZone(
     color: &'static str, 
@@ -67,25 +67,41 @@ fn SecurityZone(
     desc: &'static str,
     tooltip: &'static str,
 ) -> impl IntoView {
+    let (show_tooltip, set_show_tooltip) = create_signal(false);
     let badge = match color {
         "green" => "🟢",
         "yellow" => "🟡",
         "red" => "🔴",
         _ => "⚪",
     };
-    let zone_class = format!("zone has-tooltip {}", color);
+    let zone_class = format!("zone {}", color);
     
     view! {
-        <div class={zone_class} title={tooltip}>
+        <div class={zone_class}>
             <span class="zone-badge">{badge}</span>
             <div class="zone-info">
                 <span class="zone-name">
                     {name}
-                    <span class="info-icon">"ⓘ"</span>
+                    <button 
+                        class="info-btn"
+                        on:click=move |_| set_show_tooltip.update(|v| *v = !*v)
+                    >
+                        "ⓘ"
+                    </button>
                 </span>
                 <span class="zone-desc">{desc}</span>
             </div>
-            <div class="tooltip-content">{tooltip}</div>
+            <Show when=move || show_tooltip.get()>
+                <div class="tooltip-popup">
+                    <div class="tooltip-content">{tooltip}</div>
+                    <button 
+                        class="tooltip-close"
+                        on:click=move |_| set_show_tooltip.set(false)
+                    >
+                        "✕"
+                    </button>
+                </div>
+            </Show>
         </div>
     }
 }

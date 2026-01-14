@@ -1,4 +1,4 @@
-// what: tia portal integration section with tooltips
+// what: tia portal integration section with click-to-toggle tooltips
 // why: shows professional engineering workflow using real industrial tools
 // relations: used by hardware/component.rs, demonstrates enterprise integration
 
@@ -9,14 +9,14 @@ const TIA_TOOLTIP: &str = "Siemens TIA Portal is industry-standard PLC programmi
 const PLC_TOOLTIP: &str = "The S7-1200 receives ladder logic programs via TIA Portal over Ethernet. Once programmed, it operates autonomously, executing control logic and communicating with the Guardian Cluster via Modbus RTU.";
 const GUARDIAN_TOOLTIP: &str = "The Guardian Cluster intercepts all Modbus traffic. WIT contracts define exactly which Modbus registers can be read/written. Deny-by-default: any capability not explicitly granted is blocked. This is impossible with traditional Docker containers.";
 
-/// renders tia portal integration diagram with tooltips
+/// renders tia portal integration diagram with click-to-toggle tooltips
 #[component]
 pub fn ToolchainSection() -> impl IntoView {
     view! {
         <div class="toolchain-section">
             <h3>"TIA Portal Integration"</h3>
             <p class="toolchain-intro">"Real industrial engineering tools — the same software used by automation professionals worldwide."</p>
-            <p class="section-hint">"💡 Hover over each component for details"</p>
+            <p class="section-hint">"💡 Tap ⓘ for details"</p>
             
             <div class="toolchain-diagram">
                 // engineering workstation with tia portal
@@ -74,7 +74,7 @@ pub fn ToolchainSection() -> impl IntoView {
     }
 }
 
-/// toolchain item box with icon, name, description, tooltip, and feature list
+/// toolchain item box with click-to-toggle tooltip
 #[component]
 fn ToolBox(
     icon: &'static str,
@@ -83,15 +83,32 @@ fn ToolBox(
     tooltip: &'static str,
     features: Vec<&'static str>,
 ) -> impl IntoView {
+    let (show_tooltip, set_show_tooltip) = create_signal(false);
+    
     view! {
-        <div class="tool-box has-tooltip" title={tooltip}>
+        <div class="tool-box">
             <span class="tool-icon">{icon}</span>
             <span class="tool-name">
                 {name}
-                <span class="info-icon">"ⓘ"</span>
+                <button 
+                    class="info-btn"
+                    on:click=move |_| set_show_tooltip.update(|v| *v = !*v)
+                >
+                    "ⓘ"
+                </button>
             </span>
             <span class="tool-desc">{desc}</span>
-            <div class="tooltip-content">{tooltip}</div>
+            <Show when=move || show_tooltip.get()>
+                <div class="tooltip-popup">
+                    <div class="tooltip-content">{tooltip}</div>
+                    <button 
+                        class="tooltip-close"
+                        on:click=move |_| set_show_tooltip.set(false)
+                    >
+                        "✕"
+                    </button>
+                </div>
+            </Show>
             <ul class="tool-features">
                 {features.into_iter().map(|f| view! {
                     <li>{f}</li>

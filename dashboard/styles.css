@@ -118,6 +118,7 @@ body {
 .tab-content h2 {
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
+    text-align: center;
     color: var(--accent-primary);
 }
 
@@ -1752,6 +1753,11 @@ body {
 }
 
 /* Purdue Diagram */
+.architecture-section h3 {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
 .purdue-diagram {
     display: flex;
     flex-direction: column;
@@ -1766,6 +1772,7 @@ body {
     border-radius: 12px;
     padding: 1rem 1.5rem;
     border: 1px solid var(--border-color);
+    position: relative;
 }
 
 .purdue-level.level-3 {
@@ -2195,7 +2202,7 @@ body {
 }
 
 /* ============================================================================
-   Tooltip System - Works on Desktop (hover) and Mobile (tap)
+   Click-to-Toggle Tooltip System - Works on Desktop and Mobile
    ============================================================================ */
 
 .section-hint {
@@ -2205,74 +2212,115 @@ body {
     margin-bottom: 1rem;
 }
 
-.has-tooltip {
-    position: relative;
-    cursor: help;
-}
-
-.info-icon {
-    margin-left: 0.5rem;
-    font-size: 0.8rem;
+/* Info button - clickable on all devices */
+.info-btn {
+    background: none;
+    border: none;
+    font-size: 0.9rem;
     color: var(--accent-primary);
-    opacity: 0.7;
-    transition: opacity 0.2s;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    margin-left: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.2s;
 }
 
-.has-tooltip:hover .info-icon {
-    opacity: 1;
+.info-btn:hover {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
 }
 
-.tooltip-content {
-    display: none;
-    position: absolute;
+/* Tooltip popup - shown via Leptos signal, centered overlay */
+.tooltip-popup {
+    position: fixed;
     left: 50%;
-    transform: translateX(-50%);
-    top: 100%;
-    margin-top: 0.5rem;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
     background: var(--bg-secondary);
-    border: 1px solid var(--accent-primary);
-    border-radius: 8px;
-    padding: 1rem;
-    font-size: 0.85rem;
+    border: 2px solid var(--accent-primary);
+    border-radius: 12px;
+    padding: 1.25rem;
+    max-width: 400px;
+    width: 90%;
+    font-size: 0.9rem;
     color: var(--text-primary);
-    line-height: 1.5;
-    z-index: 100;
-    width: 300px;
-    max-width: 90vw;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    text-align: left;
+    line-height: 1.6;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+    animation: tooltip-fade-in 0.15s ease-out;
 }
 
-/* Desktop: show on hover */
-.has-tooltip:hover .tooltip-content,
-.has-tooltip:focus .tooltip-content {
+@keyframes tooltip-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tooltip-popup .tooltip-content {
     display: block;
 }
 
-/* Arrow for tooltip */
-.tooltip-content::before {
-    content: "";
+.tooltip-close {
     position: absolute;
-    bottom: 100%;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+}
+
+.tooltip-close:hover {
+    color: var(--accent-danger);
+}
+
+/* ============================================================================
+   WIT/WASM Highlight - Special emphasis for key tech
+   ============================================================================ */
+
+/* L2 Guardian Zone gets a special glowing border */
+.purdue-level.level-2.guardian-zone {
+    border: 2px solid var(--accent-secondary);
+    box-shadow:
+        0 0 15px rgba(124, 58, 237, 0.3),
+        inset 0 0 30px rgba(124, 58, 237, 0.05);
+    position: relative;
+}
+
+.purdue-level.level-2.guardian-zone::before {
+    content: "★ WASI 0.2 + WIT Contract";
+    position: absolute;
+    top: -12px;
     left: 50%;
     transform: translateX(-50%);
-    border: 8px solid transparent;
-    border-bottom-color: var(--accent-primary);
+    background: var(--accent-secondary);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.75rem;
+    border-radius: 4px;
+    white-space: nowrap;
 }
 
-/* Mobile: tap to toggle using focus-within */
-@media (hover: none) {
-    .has-tooltip {
-        cursor: pointer;
-    }
-
-    .has-tooltip:focus-within .tooltip-content,
-    .has-tooltip:active .tooltip-content {
-        display: block;
-    }
+/* Zone 2 in IEC 62443 also gets highlight */
+.zone.yellow {
+    border: 2px solid var(--accent-secondary) !important;
+    box-shadow: 0 0 12px rgba(124, 58, 237, 0.25);
 }
 
-/* Mobile Responsive Hardware Tab */
+/* ============================================================================
+   Mobile Responsive Hardware Tab
+   ============================================================================ */
+
 @media (max-width: 768px) {
     .purdue-diagram {
         padding: 0 0.5rem;
@@ -2319,20 +2367,9 @@ body {
         max-width: 180px;
     }
 
-    /* Tooltip positioning for mobile */
-    .tooltip-content {
-        position: fixed;
-        left: 5%;
-        right: 5%;
-        top: auto;
-        bottom: 10%;
-        transform: none;
-        width: 90%;
-        max-width: none;
-    }
-
-    .tooltip-content::before {
-        display: none;
+    /* Tooltip popup mobile - full width at bottom */
+    .tooltip-popup {
+        margin: 0.5rem 0;
     }
 
     /* Components section mobile */
@@ -2393,5 +2430,11 @@ body {
 
     .tool-features li {
         font-size: 0.8rem;
+    }
+
+    /* WIT label on mobile */
+    .purdue-level.level-2.guardian-zone::before {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.5rem;
     }
 }
