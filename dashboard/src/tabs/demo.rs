@@ -1041,21 +1041,21 @@ result
                 
                 // Info box explaining WASI 0.2 and Byzantine fault tolerance
                 <div class="info-box">
-                    <h4>"ℹ️ About This Demo — WASI 0.2 + 2oo3 TMR"</h4>
-                    <p>"This demonstrates "<strong>"WASI 0.2's deny-by-default security"</strong>" combined with "<strong>"2oo3 Triple Modular Redundancy"</strong>". TMR requires comparing 3 outputs to detect faults."</p>
+                    <h4>"ℹ️ About This Demo — WASI 0.2 + 2oo3 TMR "<span class="demo-badge">"Browser Demonstration"</span></h4>
+                    <p>"This visualizes "<strong>"WASI 0.2's deny-by-default security"</strong>" combined with "<strong>"2oo3 Triple Modular Redundancy"</strong>". Python exceptions are real; WASM traps show what wasmtime enforces."</p>
                     <ul>
-                        <li><strong>"🐍 Python:"</strong>" Crash kills worker mid-computation → no output. Only 2 outputs remain—can't detect if one is wrong (Byzantine fault). Must wait ~1.5s to respawn before TMR works again."</li>
-                        <li><strong>"🦀 WASM:"</strong>" Trap completes instantly → returns 'TRAP' as output. All 3 outputs compared → 2/3 agree → use majority. Rebuild in sub-ms. Byzantine detection continuous."</li>
+                        <li><strong>"🐍 Python:"</strong>" Real Pyodide exceptions crash workers → no output to vote on. Must wait ~1.5s to respawn before TMR works again."</li>
+                        <li><strong>"🦀 WASM:"</strong>" Simulates wasmtime trap behavior → returns 'TRAP' as output. All 3 outputs compared → 2/3 majority wins. Rebuild in sub-ms."</li>
                         <li>
                             <strong>"🔒 WIT Contract:"</strong>" "
                             <a class="wit-link" href="#" on:click=move |e: web_sys::MouseEvent| {
                                 e.prevent_default();
                                 set_wit_modal_open.set(true);
                             }>"View wit/attacks.wit"</a>
-                            " (defines granted capabilities)"
+                            " (same format used by wasmtime)"
                         </li>
                     </ul>
-                    <p class="hardware-note">"🔧 "<strong>"Key Insight:"</strong>" WASM's sub-millisecond rebuild keeps all 3 outputs available. Python's ~1.5s window = no Byzantine detection during recovery."</p>
+                    <p class="hardware-note">"🔧 "<strong>"Coming Soon:"</strong>" Hardware demonstration on Raspberry Pi with wasmtime enforcing WIT contracts at the syscall level."</p>
                 </div>
             </div>
             
