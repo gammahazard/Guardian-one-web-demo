@@ -71,9 +71,9 @@ pub fn VulnerabilitiesSection() -> impl IntoView {
                         url=STAT1_URL
                     />
                     <StatCard 
-                        value="33%"
-                        label="of ICS vulnerabilities have no available patch"
-                        source="SecurityWeek 2023"
+                        value="34%"
+                        label="of ICS vulnerabilities have no patch available"
+                        source="SynSaber/SecurityWeek 2023"
                         url=STAT2_URL
                     />
                     <StatCard 
