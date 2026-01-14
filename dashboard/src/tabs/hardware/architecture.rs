@@ -33,6 +33,19 @@ pub fn ArchitectureSection() -> impl IntoView {
                         <span class="level-badge">"L2"</span>
                         <span class="level-name">"Supervisory Control — Guardian Cluster"</span>
                     </div>
+                    
+                    // wit and wasm technology badges
+                    <div class="tech-badges">
+                        <div class="tech-badge">
+                            <img src="diagrams/wasm_icon.png" alt="WASM" class="tech-icon" />
+                            <span>"WASM Runtime"</span>
+                        </div>
+                        <div class="tech-badge">
+                            <img src="diagrams/wit_icon.png" alt="WIT" class="tech-icon" />
+                            <span>"WIT Contract"</span>
+                        </div>
+                    </div>
+                    
                     <div class="level-components cluster-nodes">
                         <ClusterNode status="blue" name="Pi 4" role="LEADER" />
                         <ClusterNode status="green" name="Pi Zero" role="FOLLOWER" />
