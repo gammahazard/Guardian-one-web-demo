@@ -622,7 +622,7 @@ result
     // ========================================================================
     view! {
         <div class="tab-content demo-tab">
-            <h2>"The Demo: Python vs WASM Side-by-Side"</h2>
+            <h2>"The Demo: Legacy Runtime vs Sandboxed WASM"</h2>
             
             // Initialization Time section
             <div class="demo-section">
@@ -938,8 +938,8 @@ result
                 <h4>"ℹ️ About This Demo"<span class="demo-badge">"Browser Demonstration"</span></h4>
                 
                 <div class="info-section">
-                    <h5>"💡 Key Insight"</h5>
-                    <p>"WASM turns security attacks into "<strong>"Byzantine faults"</strong>" that "<strong>"TMR voting"</strong>" handles gracefully. The attacked instance returns TRAP (not crash), so all 3 outputs exist for comparison. Python crashes produce "<strong>"no output"</strong>", blocking consensus until respawn."</p>
+                    <h5>"💡 Key Insight (Fail-Stop vs Byzantine)"</h5>
+                    <p>"WASM converts attacks into "<strong>"Fail-Stop faults"</strong>" — the instance returns an "<strong>"explicit TRAP"</strong>" instantly, not silence. TMR sees [Value, Value, Err(Trap)] and proceeds immediately. Python crashes produce "<strong>"no response"</strong>", forcing the voter to wait for a timeout before declaring the node dead."</p>
                 </div>
                 
                 <div class="info-section">

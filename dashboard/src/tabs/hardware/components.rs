@@ -7,7 +7,7 @@ use leptos::*;
 // category tooltip constants
 const L0_CAT_TOOLTIP: &str = "Physical sensors and actuators that interface directly with the industrial process.";
 const L1_CAT_TOOLTIP: &str = "Industrial PLC and power systems that execute real-time control logic.";
-const L2_CAT_TOOLTIP: &str = "The Guardian Cluster: 3 Raspberry Pis running WASM workers with Raft consensus for fault tolerance.";
+const L2_CAT_TOOLTIP: &str = "The Guardian Cluster: 3 Raspberry Pis running WASM workers with Raft consensus. For this demo, wasmtime runs natively on Linux. In production, this would typically run inside a Docker container (Mothership pattern) for fleet orchestration.";
 const INFRA_CAT_TOOLTIP: &str = "Network infrastructure and data storage supporting the industrial stack.";
 const VISUAL_CAT_TOOLTIP: &str = "Visual indicators showing system status: TMR voting results and real-time metrics.";
 

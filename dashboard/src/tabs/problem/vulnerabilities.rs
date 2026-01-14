@@ -31,8 +31,8 @@ const STAT4_URL: &str = "https://media.txone.com/prod/uploads/2024/02/TXOne-Annu
 pub fn VulnerabilitiesSection() -> impl IntoView {
     view! {
         <div class="vulnerabilities-section">
-            <h3>"🔓 Container Escape Vulnerabilities"</h3>
-            <p class="section-hint">"Real CVEs from 2024-2025 — container escapes happen regularly"</p>
+            <h3>"🔐 Why Defense-in-Depth Matters"</h3>
+            <p class="section-hint">"Real CVEs from 2024-2025 — even with Docker, kernel-level escapes happen"</p>
             
             <div class="cve-cards">
                 <CveCard 
@@ -93,8 +93,8 @@ pub fn VulnerabilitiesSection() -> impl IntoView {
             
             <div class="wasm-contrast">
                 <p>
-                    <strong>"With WASM: "</strong>
-                    "The attack surface shifts from the kernel to the runtime. No syscalls, no filesystem, no network — unless explicitly granted via capability handles. The sandbox is at the instruction level."
+                    <strong>"With Docker + WASM: "</strong>
+                    "WASM adds a second isolation layer inside your container. Even if a kernel-level escape occurs, WASM modules have no syscall access — the attack surface becomes the runtime, not the OS. Capabilities (network, filesystem) must be explicitly granted via WIT contracts."
                 </p>
             </div>
         </div>

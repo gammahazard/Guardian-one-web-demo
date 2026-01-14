@@ -485,6 +485,121 @@ body {
     color: var(--accent-success);
 }
 
+/* Mothership Pattern Table */
+.mothership-table {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.mothership-row {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 1.5fr;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mothership-row:last-child {
+    border-bottom: none;
+}
+
+.mothership-row.header {
+    background: var(--bg-secondary);
+}
+
+.mothership-row.header .mothership-cell {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.mothership-cell {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.mothership-cell.layer {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.mothership-cell.docker {
+    background: rgba(59, 130, 246, 0.05);
+    border-left: 1px solid var(--border-color);
+}
+
+.mothership-cell.wasm {
+    background: rgba(34, 197, 94, 0.05);
+    border-left: 1px solid var(--border-color);
+}
+
+.section-intro {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+/* Where WASM Shines */
+.wasm-shines {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(0, 212, 255, 0.1));
+    border: 1px solid var(--accent-success);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.wasm-shines h4 {
+    color: var(--accent-success);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.wasm-shines ul {
+    list-style: none;
+}
+
+.wasm-shines li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    color: var(--text-primary);
+}
+
+.wasm-shines li:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 768px) {
+    .mothership-row {
+        grid-template-columns: 1fr;
+    }
+
+    .mothership-row.header {
+        display: none;
+    }
+
+    .mothership-cell.layer {
+        background: var(--bg-secondary);
+        padding-top: 1rem;
+    }
+
+    .mothership-cell::before {
+        display: block;
+        font-weight: 600;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .mothership-cell.docker::before {
+        content: "🐳 Docker:";
+    }
+
+    .mothership-cell.wasm::before {
+        content: "🦀 WASM:";
+    }
+}
+
 /* CTA Button */
 .problem-cta {
     text-align: center;

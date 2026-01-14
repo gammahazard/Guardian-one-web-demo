@@ -203,7 +203,7 @@ pub fn Proof() -> impl IntoView {
             
             <div class="foundation-projects">
                 <h3>"🧪 Foundation Projects"</h3>
-                <p class="foundation-desc">"Test implementations I built to explore each concept. The benchmarks in this demo are based on patterns validated in these projects."</p>
+                <p class="foundation-desc">"Learning projects where I explored each concept. The fault recovery and isolation patterns demonstrated here are adapted from these implementations."</p>
                 <div class="project-cards">
                     <a href="https://github.com/gammahazard/vanguard-ics-guardian" target="_blank" class="project-card">
                         <span class="project-icon">"🔒"</span>

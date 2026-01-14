@@ -6,7 +6,7 @@ use leptos::*;
 
 // tooltip text constants for easy editing
 const L3_TOOLTIP: &str = "Enterprise IT zone: Stores historical data, dashboards, and analytics. Separated from control systems by network segmentation.";
-const L2_TOOLTIP: &str = "WASM Runtime with WIT Contracts: The Guardian Cluster runs WebAssembly modules in a sandboxed environment. Each capability (Modbus, GPIO, Network) must be explicitly granted via WIT contracts. This 'deny-by-default' model means even compromised code cannot access hardware it wasn't designed for. Visit 'The Demo' tab to see the actual WIT contract!";
+const L2_TOOLTIP: &str = "WASM Runtime with WIT Contracts: The Guardian Cluster runs WebAssembly modules in a sandboxed environment. Each capability (Modbus, GPIO, Network) must be explicitly granted via WIT contracts. In production, this layer typically runs inside a Docker container (the 'Mothership'). WASM modules are hot-swapped inside for fault isolation — combining Docker's deployment tooling with WASM's granular security.";
 const L1_TOOLTIP: &str = "Industrial PLC: Executes real-time control logic. Receives validated commands from Level 2 via Modbus RTU protocol.";
 const L0_TOOLTIP: &str = "Physical sensors and actuators: Direct hardware interface. BME280 reads temperature/humidity, relay controls the industrial fan.";
 

@@ -8,8 +8,8 @@ use leptos::*;
 const SOLOMON_NAME: &str = "Solomon Hykes";
 const SOLOMON_ROLE: &str = "Docker Co-Founder";
 const SOLOMON_DATE: &str = "March 27, 2019";
-const SOLOMON_TWEET: &str = "If WASM+WASI existed in 2008, we wouldn't have needed to create Docker. That's how important it is. WebAssembly on the server is the future of computing.";
-const SOLOMON_URL: &str = "https://x.com/solomonstre/status/1111004913222324225";
+const SOLOMON_TWEET: &str = "So will wasm replace Docker? No, but imagine a future where Docker runs linux containers, windows containers and wasm containers side by side. Over time wasm might become the most popular container type. Docker will love them all equally, and run it all :)";
+const SOLOMON_URL: &str = "https://x.com/solomonstre/status/1111113329647325185";
 
 /// Lin Clark tweet info
 const LIN_NAME: &str = "Lin Clark";
@@ -24,8 +24,8 @@ const LIN_ARTICLE: &str = "https://hacks.mozilla.org/2019/03/standardizing-wasi-
 pub fn QuotesSection() -> impl IntoView {
     view! {
         <div class="quotes-section">
-            <h3>"💬 The Tweets That Started It All"</h3>
-            <p class="section-hint">"Industry leaders recognized WASM's potential in 2019"</p>
+            <h3>"💬 The Vision: Containers + WASM"</h3>
+            <p class="section-hint">"Docker's founder on the coexistence of containers and WASM (2019)"</p>
             
             <div class="quote-cards">
                 <QuoteCard 

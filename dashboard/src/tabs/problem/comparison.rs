@@ -1,65 +1,70 @@
-// what: docker vs wasm comparison table
-// why: clear side-by-side showing architectural differences
+// what: docker + wasm complementary architecture section
+// why: shows the "mothership pattern" - how docker and wasm work together
 // relations: used by problem/component.rs as final section before CTA
 
 use leptos::*;
 
-/// renders the comparison table and CTA button
+/// renders the complementary architecture section and CTA button
 #[component]
 pub fn ComparisonSection() -> impl IntoView {
     view! {
         <div class="comparison-section">
-            <h3>"⚖️ Docker vs WASM: Architectural Differences"</h3>
+            <h3>"🚀 The Mothership Pattern: Docker + WASM"</h3>
+            <p class="section-intro">
+                "Docker handles orchestration. WASM handles fault isolation. Together, they're stronger."
+            </p>
             
-            <div class="comparison-table">
-                <div class="comparison-row header">
-                    <span class="comparison-cell">"Property"</span>
-                    <span class="comparison-cell docker">"🐳 Docker"</span>
-                    <span class="comparison-cell wasm">"🦀 WASM + WASI"</span>
+            // The Mothership architecture table
+            <div class="mothership-table">
+                <div class="mothership-row header">
+                    <span class="mothership-cell">"Layer"</span>
+                    <span class="mothership-cell docker">"🐳 Docker Provides"</span>
+                    <span class="mothership-cell wasm">"🦀 WASM Adds"</span>
                 </div>
                 
-                <ComparisonRow 
-                    property="Isolation Level"
-                    docker="Process (shared kernel)"
-                    docker_bad=true
-                    wasm="Instruction (no kernel)"
-                    wasm_good=true
+                <MothershipRow 
+                    layer="Deployment"
+                    docker="Fleet orchestration, container registry"
+                    wasm="~50KB logic patches (vs 50MB images)"
                 />
-                <ComparisonRow 
-                    property="Cold Start"
-                    docker="500ms - 5 seconds"
-                    docker_bad=true
-                    wasm="< 1 millisecond"
-                    wasm_good=true
+                <MothershipRow 
+                    layer="Isolation"
+                    docker="Process namespaces, cgroups"
+                    wasm="Instruction-level sandbox (no kernel)"
                 />
-                <ComparisonRow 
-                    property="Binary Size"
-                    docker="50 - 200 MB"
-                    docker_bad=true
-                    wasm="15 - 70 KB"
-                    wasm_good=true
+                <MothershipRow 
+                    layer="Fault Recovery"
+                    docker="Container restart (~1-5s)"
+                    wasm="Module TRAP + rebuild (~0.04ms)"
                 />
-                <ComparisonRow 
-                    property="Default Permissions"
-                    docker="Network + FS access"
-                    docker_bad=true
-                    wasm="DENY all (capability grants)"
-                    wasm_good=true
+                <MothershipRow 
+                    layer="Security"
+                    docker="Image signing, network policies"
+                    wasm="Capability deny-by-default (WIT)"
                 />
-                <ComparisonRow 
-                    property="Container Escape"
-                    docker="CVEs every year"
-                    docker_bad=true
-                    wasm="Reduced surface (runtime only)"
-                    wasm_good=true
-                />
-                <ComparisonRow 
-                    property="Recovery from Crash"
-                    docker="Restart container (seconds)"
-                    docker_bad=true
-                    wasm="TRAP + reinit (microseconds)"
-                    wasm_good=true
-                />
+            </div>
+            
+            // Where WASM shines section
+            <div class="wasm-shines">
+                <h4>"✨ Where WASM Shines (Inside Docker)"</h4>
+                <ul>
+                    <li>
+                        <strong>"Fault Isolation: "</strong>
+                        "One WASM module crashes → container survives. No cold-start penalty."
+                    </li>
+                    <li>
+                        <strong>"OTA Bandwidth: "</strong>
+                        "Ship 50KB logic patch over satellite, not 50MB container layer."
+                    </li>
+                    <li>
+                        <strong>"Protocol Parsing: "</strong>
+                        "Run untrusted parsers (Modbus, DNP3) in sandbox. Memory bugs can't escape."
+                    </li>
+                    <li>
+                        <strong>"Fail-Stop Faults: "</strong>
+                        "Attacks produce explicit TRAP, not silence. TMR voting proceeds instantly."
+                    </li>
+                </ul>
             </div>
             
             <div class="problem-cta">
@@ -73,29 +78,18 @@ pub fn ComparisonSection() -> impl IntoView {
     }
 }
 
-/// single comparison row
+/// single mothership row showing complementary roles
 #[component]
-fn ComparisonRow(
-    property: &'static str,
+fn MothershipRow(
+    layer: &'static str,
     docker: &'static str,
-    docker_bad: bool,
     wasm: &'static str,
-    wasm_good: bool,
 ) -> impl IntoView {
-    let docker_class = if docker_bad { "comparison-cell docker bad" } else { "comparison-cell docker" };
-    let wasm_class = if wasm_good { "comparison-cell wasm good" } else { "comparison-cell wasm" };
-    
     view! {
-        <div class="comparison-row">
-            <span class="comparison-cell property">{property}</span>
-            <span class={docker_class}>
-                {if docker_bad { "❌ " } else { "" }}
-                {docker}
-            </span>
-            <span class={wasm_class}>
-                {if wasm_good { "✅ " } else { "" }}
-                {wasm}
-            </span>
+        <div class="mothership-row">
+            <span class="mothership-cell layer">{layer}</span>
+            <span class="mothership-cell docker">{docker}</span>
+            <span class="mothership-cell wasm">{wasm}</span>
         </div>
     }
 }

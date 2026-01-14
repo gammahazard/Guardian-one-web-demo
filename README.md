@@ -1,6 +1,6 @@
 # Guardian One Web-Demo
 
-**Industrial Edge Security Demonstration — Python vs WASM Side-by-Side**
+**Protocol Firewall & Edge Gateway Demo — Legacy Runtime vs Sandboxed WASM**
 
 [![Status](https://img.shields.io/badge/status-demo_complete-green.svg)]()
 [![Tests](https://img.shields.io/badge/tests-28_passing-brightgreen.svg)]()
@@ -14,14 +14,16 @@
 
 ---
 
-## The Thesis
+## The Thesis: Docker + WASM = Stronger Together
 
-| Challenge | Industry Today | WASI 0.2 Approach |
-|:----------|:---------------|:------------------|
-| **Isolation** | Docker namespaces (shared kernel) | WASM sandbox (boundary separation) |
-| **Fault Recovery** | Process restart (~1.5s cold-start) | **Zero-Downtime** (2oo3 TMR masks faults) |
-| **Failure Mode** | Catastrophic Process Crash (Fatal) | **Byzantine Fault** (Contained & Voted Out) |
-| **Security Model** | Allow-then-block (iptables) | Deny-by-default (capability-based) |
+| Layer | 🐳 Docker Provides | 🦀 WASM Adds |
+|:------|:-------------------|:-------------|
+| **Deployment** | Fleet orchestration, container registry | ~50KB logic patches (vs 50MB images) |
+| **Isolation** | Process namespaces, cgroups | Instruction-level sandbox (no kernel) |
+| **Fault Recovery** | Container restart (~1-5s) | Module TRAP + rebuild (~0.04ms) |
+| **Security** | Image signing, network policies | Capability deny-by-default (WIT) |
+
+> **📋 Scope:** This demo targets **Industrial Edge Gateways** (protocol parsing, telemetry, edge logic). WASM runs inside Docker in production — the "Mothership Pattern."
 
 ---
 

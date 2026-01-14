@@ -6,7 +6,7 @@ use leptos::*;
 
 // zone tooltip constants
 const ZONE3_TOOLTIP: &str = "Enterprise IT Zone (Low Risk): Contains monitoring and analytics systems. Fully isolated from industrial control via network segmentation.";
-const ZONE2_TOOLTIP: &str = "Guardian Cluster DMZ: The WASM runtime acts as a security boundary. Workers are compiled to WebAssembly and execute in a sandboxed environment. WASI (WebAssembly System Interface) provides capability-based security: each module must be explicitly granted access to specific resources like Modbus, GPIO, or Network. This is fundamentally different from containers which inherit host kernel trust.";
+const ZONE2_TOOLTIP: &str = "Guardian Cluster DMZ: The WASM runtime acts as a security boundary. Workers are compiled to WebAssembly and execute in a sandboxed environment. WASI provides capability-based security: each module must be explicitly granted access to specific resources. In production, WASM typically runs inside a Docker container — combining Docker's orchestration with WASM's instruction-level isolation.";
 const ZONE1_TOOLTIP: &str = "Industrial Control Zone (High Risk): Contains the PLC and field devices. Only validated commands from Zone 2 can reach this zone via Modbus RTU.";
 
 /// renders iec 62443 zone and conduit model diagram with click-to-toggle tooltips

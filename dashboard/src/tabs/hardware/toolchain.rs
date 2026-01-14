@@ -7,7 +7,7 @@ use leptos::*;
 // toolchain tooltips
 const TIA_TOOLTIP: &str = "Siemens TIA Portal is industry-standard PLC programming software. It provides ladder logic programming, device configuration, and live monitoring. Using real engineering tools (not hobbyist alternatives) demonstrates enterprise readiness.";
 const PLC_TOOLTIP: &str = "The S7-1200 receives ladder logic programs via TIA Portal over Ethernet. Once programmed, it operates autonomously, executing control logic and communicating with the Guardian Cluster via Modbus RTU.";
-const GUARDIAN_TOOLTIP: &str = "The Guardian Cluster intercepts all Modbus traffic. WIT contracts define exactly which Modbus registers can be read/written. Deny-by-default: any capability not explicitly granted is blocked. This is impossible with traditional Docker containers.";
+const GUARDIAN_TOOLTIP: &str = "The Guardian Cluster intercepts all Modbus traffic. WIT contracts define exactly which Modbus registers can be read/written. Deny-by-default: any capability not explicitly granted is blocked. Docker containers inherit broader host privileges by default.";
 
 /// renders tia portal integration diagram with click-to-toggle tooltips
 #[component]

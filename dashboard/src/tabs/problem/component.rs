@@ -14,8 +14,8 @@ pub fn Problem() -> impl IntoView {
         <div class="tab-content problem-tab">
             <h2>"The Problem: Why Industrial Edge Security is Broken"</h2>
             <p class="tab-intro">
-                "Traditional containerization was designed for cloud scalability, not industrial safety. "
-                "Here's why WASM + WASI changes everything."
+                "Docker solves cloud orchestration. WASM solves the last mile: secure, bandwidth-efficient logic "
+                "that runs inside your containers. Industrial edge needs both."
             </p>
             
             // section 1: the tweets that started the conversation
