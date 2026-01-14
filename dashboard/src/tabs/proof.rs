@@ -41,13 +41,6 @@ async fn measure_wasm_instantiate() -> f64 {
     (now() - start) / iterations as f64
 }
 
-fn get_pyodide_load_time() -> Option<f64> {
-    let window = web_sys::window()?;
-    js_sys::Reflect::get(&window, &"pyodideLoadTime".into())
-        .ok()?
-        .as_f64()
-}
-
 #[component]
 pub fn Proof() -> impl IntoView {
     let (simulation_ran, set_simulation_ran) = create_signal(false);
@@ -55,22 +48,56 @@ pub fn Proof() -> impl IntoView {
     let (wasm_instantiate_ms, set_wasm_instantiate_ms) = create_signal(0.0f64);
     let (python_coldstart_ms, set_python_coldstart_ms) = create_signal(0.0f64);
     let (wasm_recovery_ms, set_wasm_recovery_ms) = create_signal(0.0f64);
+    let (run_count, set_run_count) = create_signal(0u32);
     
     let run_simulation = move |_| {
         if running.get() { return; }
         set_running.set(true);
         
         wasm_bindgen_futures::spawn_local(async move {
-            // Measure WASM instantiation
+            // Measure WASM instantiation (fresh each time)
             let wasm_time = measure_wasm_instantiate().await;
             set_wasm_instantiate_ms.set(wasm_time);
-            set_wasm_recovery_ms.set(wasm_time); // Recovery = re-instantiation
+            set_wasm_recovery_ms.set(wasm_time);
             
-            // Get Pyodide cold-start (already measured at page load)
-            if let Some(py_time) = get_pyodide_load_time() {
-                set_python_coldstart_ms.set(py_time);
+            // Reload Pyodide and measure REAL cold-start time
+            // This destroys the existing Pyodide instance and loads a fresh one
+            let window = web_sys::window().unwrap();
+            
+            // Set flag that we're reloading
+            let _ = js_sys::Reflect::set(&window, &"pyodideReloading".into(), &true.into());
+            
+            let start = now();
+            
+            // Execute JS to reload Pyodide - this will block until complete
+            let reload_code = r#"
+                (async () => {
+                    // Destroy existing instance
+                    if (window.pyodide) {
+                        window.pyodide = null;
+                    }
+                    // Load fresh Pyodide
+                    window.pyodide = await loadPyodide();
+                    window.runPython = (code) => window.pyodide.runPython(code);
+                    return true;
+                })()
+            "#;
+            
+            let reload_promise = js_sys::eval(reload_code);
+            if let Ok(promise) = reload_promise {
+                if let Ok(js_promise) = promise.dyn_into::<js_sys::Promise>() {
+                    let _ = wasm_bindgen_futures::JsFuture::from(js_promise).await;
+                }
             }
             
+            let py_time = now() - start;
+            set_python_coldstart_ms.set(py_time);
+            
+            // Update window.pyodideLoadTime with new measurement
+            let _ = js_sys::Reflect::set(&window, &"pyodideLoadTime".into(), &py_time.into());
+            let _ = js_sys::Reflect::set(&window, &"pyodideReloading".into(), &false.into());
+            
+            set_run_count.update(|n| *n += 1);
             set_simulation_ran.set(true);
             set_running.set(false);
         });
@@ -80,20 +107,29 @@ pub fn Proof() -> impl IntoView {
         <div class="tab-content proof-tab">
             <h2>"The Proof: Real Results"</h2>
             
+            // Hardware demo video placeholder
+            <div class="hardware-video-placeholder">
+                <div class="video-icon">"🎬"</div>
+                <h4>"Hardware Demonstration Video"</h4>
+                <p>"Coming Soon — Raspberry Pi running wasmtime with real sensor data"</p>
+            </div>
+            
             <div class="simulation-control">
                 <button 
                     class="action-btn simulation-btn"
                     disabled=move || running.get()
-                    attr:data-tooltip="Measures WASM instantiation (10 iterations avg) and captures Pyodide cold-start from page load"
+                    attr:data-tooltip="Reloads both WASM module and Pyodide runtime fresh, measures real cold-start times"
                     on:click=run_simulation
                 >
-                    {move || if running.get() { "⏳ Measuring..." } else { "▶️ Run Simulation" }}
+                    {move || if running.get() { "⏳ Reloading Pyodide..." } else { "▶️ Run Simulation" }}
                 </button>
                 <p class="simulation-note">
-                    {move || if simulation_ran.get() { 
-                        "✅ Real measurements from your browser shown below" 
+                    {move || if running.get() {
+                        "⏳ Reloading Pyodide runtime (this takes 1-2 seconds)...".to_string()
+                    } else if simulation_ran.get() { 
+                        format!("✅ Fresh measurements from run #{} shown below", run_count.get())
                     } else { 
-                        "Measures: WASM instantiation time vs Pyodide runtime load time" 
+                        "Reloads WASM module + Pyodide fresh each run for accurate comparison".to_string()
                     }}
                 </p>
             </div>
@@ -165,28 +201,26 @@ pub fn Proof() -> impl IntoView {
                 <p class="metrics-note">"All timing values measured in your browser using real WebAssembly API and Pyodide."</p>
             </div>
             
-            <div class="foundation-links">
-                <h3>"Foundation Projects"</h3>
-                <ul>
-                    <li>
-                        <a href="https://github.com/gammahazard/vanguard-ics-guardian" target="_blank">
-                            "ICS Guardian"
-                        </a>
-                        " — Capability sandboxing"
-                    </li>
-                    <li>
-                        <a href="https://github.com/gammahazard/protocol-gateway-sandbox" target="_blank">
-                            "Protocol Gateway"
-                        </a>
-                        " — 2oo3 TMR crash recovery"
-                    </li>
-                    <li>
-                        <a href="https://github.com/gammahazard/Raft-Consensus" target="_blank">
-                            "Raft Consensus"
-                        </a>
-                        " — Distributed consensus"
-                    </li>
-                </ul>
+            <div class="foundation-projects">
+                <h3>"🧪 Foundation Projects"</h3>
+                <p class="foundation-desc">"Test implementations I built to explore each concept. The benchmarks in this demo are based on patterns validated in these projects."</p>
+                <div class="project-cards">
+                    <a href="https://github.com/gammahazard/vanguard-ics-guardian" target="_blank" class="project-card">
+                        <span class="project-icon">"🔒"</span>
+                        <span class="project-name">"ICS Guardian"</span>
+                        <span class="project-desc">"WIT capability sandboxing"</span>
+                    </a>
+                    <a href="https://github.com/gammahazard/protocol-gateway-sandbox" target="_blank" class="project-card">
+                        <span class="project-icon">"🔄"</span>
+                        <span class="project-name">"Protocol Gateway"</span>
+                        <span class="project-desc">"2oo3 TMR crash recovery"</span>
+                    </a>
+                    <a href="https://github.com/gammahazard/Raft-Consensus" target="_blank" class="project-card">
+                        <span class="project-icon">"🗳️"</span>
+                        <span class="project-name">"Raft Consensus"</span>
+                        <span class="project-desc">"Distributed leader election"</span>
+                    </a>
+                </div>
             </div>
         </div>
     }
