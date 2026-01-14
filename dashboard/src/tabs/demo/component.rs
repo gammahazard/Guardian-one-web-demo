@@ -622,7 +622,7 @@ result
     // ========================================================================
     view! {
         <div class="tab-content demo-tab">
-            <h2>"The Demo: Legacy Runtime vs Sandboxed WASM"</h2>
+            <h2>"The Demo: Interpreted Runtime vs Sandboxed WASM"</h2>
             
             // Initialization Time section
             <div class="demo-section">

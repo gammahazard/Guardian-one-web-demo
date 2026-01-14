@@ -1,6 +1,6 @@
 # Guardian One Web-Demo
 
-**Protocol Firewall & Edge Gateway Demo — Legacy Runtime vs Sandboxed WASM**
+**Protocol Firewall & Edge Gateway Demo — Interpreted Runtime vs Sandboxed WASM**
 
 [![Status](https://img.shields.io/badge/status-demo_complete-green.svg)]()
 [![Tests](https://img.shields.io/badge/tests-28_passing-brightgreen.svg)]()
@@ -37,7 +37,7 @@
 
 > **💡 Key Technical Insight:**
 >
-> WASM's strict isolation turns **catastrophic process crashes** into **manageable Byzantine faults**.
+> WASM's strict isolation turns **process-level failures** into **manageable Fail-Stop faults**.
 >
 > When a WASM module panics or violates security capabilities, it traps. The Host catches this trap, marks that single instance as "Faulty," and the **2oo3 TMR Voting** logic instantly ignores it. The system continues with **zero downtime**, and the faulty instance is hot-swapped in sub-milliseconds.
 
