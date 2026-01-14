@@ -23,7 +23,7 @@ pub fn App() -> impl IntoView {
     view! {
         <div class="app">
             <header class="header">
-                <h1>"Reliability Triad Console"</h1>
+                <h1>"Guardian One Console"</h1>
                 <p class="subtitle">"Industrial Edge Security Demonstration"</p>
             </header>
 
@@ -64,7 +64,7 @@ pub fn App() -> impl IntoView {
             </main>
 
             <footer class="footer">
-                <p>"Part of the Reliability Triad Portfolio • Powered by "<a href="https://wasi.dev/" target="_blank" rel="noopener">"WASI 0.2"</a></p>
+                <p>"Guardian One Foundation • Powered by "<a href="https://wasi.dev/" target="_blank" rel="noopener">"WASI 0.2"</a></p>
             </footer>
         </div>
     }

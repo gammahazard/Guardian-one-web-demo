@@ -7,7 +7,7 @@ Attack Simulation Module
 
 This module contains Python attack scripts that demonstrate real error handling
 differences between Python and WASM. Each attack produces genuine exceptions
-that are captured and displayed in the Reliability Triad Console.
+that are captured and displayed in the Guardian One Console.
 """
 
 from . import buffer_overflow

@@ -76,7 +76,7 @@ pub const WIT_CODE_EXCERPT: &str = r#"// wit/attacks.wit - WASI 0.2 Component Mo
 //
 // ============================================================================
 
-package reliability-triad:attacks@0.1.0;
+package guardian-one:attacks@0.1.0;
 
 // shared data types used by workers and supervisor
 interface common-types {

@@ -1,4 +1,4 @@
-# Reliability Triad Console
+# Guardian One Web-Demo
 
 **Industrial Edge Security Demonstration — Python vs WASM Side-by-Side**
 
@@ -78,7 +78,7 @@ cd dashboard && trunk serve --open
 ## Project Structure
 
 ```
-reliability-triad/
+guardian-one-web-demo/
 ├── dashboard/               # Leptos frontend
 │   └── src/
 │       └── tabs/            # Story-driven tab components
@@ -118,6 +118,27 @@ reliability-triad/
 
 ---
 
+## Testing
+
+28 tests validate the demo's core guarantees:
+
+| Module | Tests | Focus |
+|--------|-------|-------|
+| Attack Logic | 8 | WIT config accuracy, edge cases |
+| Voting Logic | 8 | 2oo3 TMR, leader election |
+| Measurement | 7 | Speedup math, bounds |
+| State Invariants | 5 | System-wide guarantees |
+
+```bash
+cd dashboard && cargo test --lib
+```
+
+![Test Results](diagrams/tests.png)
+
+See [docs/TESTING.md](docs/TESTING.md) for full test documentation.
+
+---
+
 ## Git Workflow
 
 ```
@@ -132,7 +153,7 @@ feature/*   feature/* feature/*
 
 ---
 
-## Related Projects (The Reliability Triad)
+## Related Projects (The Guardian One Foundation)
 
 | Project | Focus | Demo |
 |---------|-------|------|

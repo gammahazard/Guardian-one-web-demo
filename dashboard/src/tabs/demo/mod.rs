@@ -7,5 +7,8 @@ pub mod attacks;
 pub mod wasm;
 mod component;
 
+#[cfg(test)]
+mod tests;
+
 // Re-export the Demo component for use by parent module
 pub use component::Demo;
