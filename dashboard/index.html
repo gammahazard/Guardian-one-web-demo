@@ -1,13 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Reliability Triad Console - Industrial Edge Security Demonstration comparing Python vs WASM">
+    <meta name="description"
+        content="Reliability Triad Console - Industrial Edge Security Demonstration comparing Python vs WASM">
     <title>Reliability Triad Console</title>
     <link data-trunk rel="css" href="styles.css">
+
+    <!-- Pyodide for real Python execution in browser -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+
+    <!-- Copy Python files to dist -->
+    <link data-trunk rel="copy-dir" href="../python-equivalents" data-target-path="python" />
 </head>
+
 <body>
     <link data-trunk rel="rust" data-wasm-opt="z" />
+
+    <script>
+        // Global Pyodide instance
+        window.pyodideReady = false;
+        window.pyodideInstance = null;
+
+        // Load Pyodide asynchronously
+        async function loadPyodideInstance() {
+            const startTime = performance.now();
+            console.log("[Pyodide] Starting load...");
+
+            try {
+                window.pyodideInstance = await loadPyodide();
+                window.pyodideLoadTime = performance.now() - startTime;
+                window.pyodideReady = true;
+                console.log(`[Pyodide] Ready in ${window.pyodideLoadTime.toFixed(0)}ms`);
+
+                // Dispatch event for Leptos to pick up
+                window.dispatchEvent(new CustomEvent('pyodide-ready', {
+                    detail: { loadTime: window.pyodideLoadTime }
+                }));
+            } catch (e) {
+                console.error("[Pyodide] Failed to load:", e);
+            }
+        }
+
+        // Run Python code and return result
+        window.runPython = async function (code) {
+            if (!window.pyodideReady) {
+                return { error: "Pyodide not ready" };
+            }
+
+            const startTime = performance.now();
+            try {
+                const result = await window.pyodideInstance.runPythonAsync(code);
+                const execTime = performance.now() - startTime;
+                return {
+                    result: result,
+                    executionTime: execTime
+                };
+            } catch (e) {
+                return { error: e.message };
+            }
+        };
+
+        // Start loading after page load
+        window.addEventListener('DOMContentLoaded', loadPyodideInstance);
+    </script>
 </body>
+
 </html>

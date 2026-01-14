@@ -162,10 +162,21 @@ body {
     border: 1px solid var(--border-color);
 }
 
-.purdue-level.level-3 { border-left: 4px solid #8b5cf6; }
-.purdue-level.level-2 { border-left: 4px solid var(--accent-primary); }
-.purdue-level.level-1 { border-left: 4px solid var(--accent-success); }
-.purdue-level.level-0 { border-left: 4px solid var(--accent-warning); }
+.purdue-level.level-3 {
+    border-left: 4px solid #8b5cf6;
+}
+
+.purdue-level.level-2 {
+    border-left: 4px solid var(--accent-primary);
+}
+
+.purdue-level.level-1 {
+    border-left: 4px solid var(--accent-success);
+}
+
+.purdue-level.level-0 {
+    border-left: 4px solid var(--accent-warning);
+}
 
 .level-label {
     font-weight: 600;
@@ -280,6 +291,65 @@ body {
     display: block;
 }
 
+/* Run Buttons */
+.run-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.run-btn {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1rem;
+}
+
+.run-btn.python {
+    background: linear-gradient(135deg, var(--accent-warning), #d97706);
+    color: white;
+}
+
+.run-btn.wasm {
+    background: linear-gradient(135deg, var(--accent-success), #16a34a);
+    color: white;
+}
+
+.run-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Startup Time Badge */
+.startup-time {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.startup-time .time {
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.startup-time .time.success {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--accent-success);
+}
+
+.startup-time .time.warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--accent-warning);
+}
+
+/* Terminal warning color */
+.terminal-line.warning {
+    color: var(--accent-warning);
+}
+
 /* Demo Panels */
 .demo-panels {
     display: grid;
@@ -391,16 +461,16 @@ body {
     .header h1 {
         font-size: 1.5rem;
     }
-    
+
     .tabs {
         gap: 0.25rem;
     }
-    
+
     .tab {
         padding: 0.5rem 1rem;
         font-size: 0.8rem;
     }
-    
+
     .content {
         padding: 1rem;
     }
