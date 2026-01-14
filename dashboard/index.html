@@ -54,12 +54,19 @@
             try {
                 const result = await window.pyodideInstance.runPythonAsync(code);
                 const execTime = performance.now() - startTime;
+
+                // If result is a string, return it directly for easier parsing
+                if (typeof result === 'string') {
+                    return result;
+                }
+                // Otherwise return as object
                 return {
-                    result: result,
+                    result: String(result),
                     executionTime: execTime
                 };
             } catch (e) {
-                return { error: e.message };
+                // Return error in same pipe-delimited format
+                return `ERROR|${e.name || 'Exception'}|${e.message}`;
             }
         };
 
