@@ -473,17 +473,13 @@ result
                     let py_elapsed = now() - py_start;
                     set_python_exec_ms.set(py_elapsed);
                     
-                    // Generate slightly different random values for Python (realistic sensor variation)
-                    let temp = 20.0 + (js_sys::Math::random() * 10.0);  // 20-30°C
-                    let hum = 40.0 + (js_sys::Math::random() * 20.0);   // 40-60%
-                    let pres = 1008.0 + (js_sys::Math::random() * 15.0); // 1008-1023 hPa
-                    
+                    // Use same sensor values as WASM (they're reading the "same" sensor)
                     set_python_logs.update(|logs| {
                         logs.push(LogEntry { level: "success".into(), message: format!("[OK] Pyodide executed in {:.2}ms", py_elapsed) });
                         logs.push(LogEntry { level: "success".into(), message: "[OK] BME280 driver initialized".into() });
-                        logs.push(LogEntry { level: "info".into(), message: format!("Temperature: {:.1}°C", temp) });
-                        logs.push(LogEntry { level: "info".into(), message: format!("Humidity: {:.1}%", hum) });
-                        logs.push(LogEntry { level: "info".into(), message: format!("Pressure: {:.2} hPa", pres) });
+                        logs.push(LogEntry { level: "info".into(), message: format!("Temperature: {:.1}°C", wasm_result.0) });
+                        logs.push(LogEntry { level: "info".into(), message: format!("Humidity: {:.1}%", wasm_result.1) });
+                        logs.push(LogEntry { level: "info".into(), message: format!("Pressure: {:.2} hPa", wasm_result.2) });
                     });
                 }
                 Err(e) => {
