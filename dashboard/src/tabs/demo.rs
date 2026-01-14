@@ -881,7 +881,7 @@ result
                                         class:active=!is_dead
                                         class:dead=is_dead
                                         class:leader=is_leader && !is_dead
-                                        attr:data-tooltip=move || if is_leader { "Leader (1.5s election if fails)" } else { "Follower" }
+                                        attr:data-tooltip=move || if is_leader { "Leader (long election if fails)" } else { "Follower" }
                                     >
                                         {label}
                                     </div>
@@ -895,7 +895,7 @@ result
                 // wasm terminal - Leader/Follower pattern (like Raft)
                 <div class="terminal-panel wasm-panel">
                     <div class="terminal-header">
-                        <span class="terminal-title" attr:data-tooltip="2oo3 TMR voting with 0.04ms WASM failover">"🦀 WASM (2oo3 TMR / Raft-like)"</span>
+                        <span class="terminal-title" attr:data-tooltip="2oo3 TMR voting with sub-ms WASM failover">"🦀 WASM (2oo3 TMR / Raft-like)"</span>
                         <span class="terminal-status">"🟢 3/3 UP"</span>
                     </div>
                     <div class="terminal" id="wasm-terminal">
@@ -911,7 +911,7 @@ result
                         }}
                     </div>
                     // instance boxes - Leader (L) + Followers (F) like Raft
-                    <div class="instances-panel" title="WASM enables fast consensus: Leader re-election takes 0.04ms (vs 1.5s Python). 2oo3 voting rejects faulty instance, system continues.">
+                    <div class="instances-panel" attr:data-tooltip="WASM enables fast consensus: sub-ms leader election (vs slow Python). 2oo3 voting rejects faulty instance, system continues.">
                         <span class="instances-label">"Nodes:"</span>
                         {move || {
                             let states = instance_states.get();
@@ -927,7 +927,7 @@ result
                                         class:healthy=states[i] == InstanceState::Healthy && !is_faulty
                                         class:faulty=is_faulty
                                         class:leader=is_leader
-                                        attr:data-tooltip=move || if is_leader { "Leader (0.04ms election)" } else { "Follower" }
+                                        attr:data-tooltip=move || if is_leader { "Leader (sub-ms election if fails)" } else { "Follower" }
                                     >
                                         {label}
                                     </div>
