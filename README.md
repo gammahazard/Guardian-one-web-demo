@@ -3,9 +3,11 @@
 **Industrial Edge Security Demonstration — Python vs WASM Side-by-Side**
 
 [![Status](https://img.shields.io/badge/status-demo_complete-green.svg)]()
+[![Tests](https://img.shields.io/badge/tests-28_passing-brightgreen.svg)]()
 [![Rust](https://img.shields.io/badge/Rust-1.75+-orange.svg)](https://www.rust-lang.org/)
 [![WASI](https://img.shields.io/badge/WASI-0.2-blueviolet.svg)](https://wasi.dev/)
 [![Leptos](https://img.shields.io/badge/Leptos-0.6-blue.svg)](https://leptos.dev/)
+[![Pyodide](https://img.shields.io/badge/Pyodide-0.24-yellow.svg)](https://pyodide.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > A story-driven dashboard demonstrating WASI 0.2 capabilities vs traditional Python/Docker approaches through **real code execution** in the browser.
@@ -53,12 +55,12 @@
 
 ## Dashboard Tabs
 
-| Tab | Purpose | Status |
-|-----|---------|--------|
-| **The Problem** | Why traditional ICS security fails — attack surface comparison | ✅ Complete |
-| **The Hardware** | Architecture we're simulating — Purdue Model zones | 🔄 In Progress |
-| **The Demo** | Live Python (Pyodide) vs WASM with attack scenarios | ✅ Complete |
-| **The Proof** | Metrics simulation, foundation projects links | ✅ Complete |
+| Tab | What You'll See |
+|-----|-----------------|
+| **The Problem** | Attack surface comparison — why traditional ICS security fails |
+| **The Hardware** | Architecture diagram — Purdue Model zones we're simulating |
+| **The Demo** | Live attack simulations — Python (Pyodide) vs WASM side-by-side |
+| **The Proof** | Real metrics + foundation project links |
 
 ---
 
