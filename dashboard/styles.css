@@ -2193,3 +2193,205 @@ body {
     height: 40px;
     object-fit: contain;
 }
+
+/* ============================================================================
+   Tooltip System - Works on Desktop (hover) and Mobile (tap)
+   ============================================================================ */
+
+.section-hint {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.has-tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.info-icon {
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--accent-primary);
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.has-tooltip:hover .info-icon {
+    opacity: 1;
+}
+
+.tooltip-content {
+    display: none;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 100%;
+    margin-top: 0.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent-primary);
+    border-radius: 8px;
+    padding: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    z-index: 100;
+    width: 300px;
+    max-width: 90vw;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    text-align: left;
+}
+
+/* Desktop: show on hover */
+.has-tooltip:hover .tooltip-content,
+.has-tooltip:focus .tooltip-content {
+    display: block;
+}
+
+/* Arrow for tooltip */
+.tooltip-content::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-bottom-color: var(--accent-primary);
+}
+
+/* Mobile: tap to toggle using focus-within */
+@media (hover: none) {
+    .has-tooltip {
+        cursor: pointer;
+    }
+
+    .has-tooltip:focus-within .tooltip-content,
+    .has-tooltip:active .tooltip-content {
+        display: block;
+    }
+}
+
+/* Mobile Responsive Hardware Tab */
+@media (max-width: 768px) {
+    .purdue-diagram {
+        padding: 0 0.5rem;
+    }
+
+    .purdue-level {
+        padding: 0.75rem;
+    }
+
+    .level-header {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .level-name {
+        font-size: 0.9rem;
+    }
+
+    .tech-badges {
+        gap: 0.75rem;
+    }
+
+    .tech-badge {
+        padding: 0.4rem 0.75rem;
+    }
+
+    .tech-icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .tech-badge span {
+        font-size: 0.75rem;
+    }
+
+    .level-components {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hw-card {
+        width: 100%;
+        max-width: 180px;
+    }
+
+    /* Tooltip positioning for mobile */
+    .tooltip-content {
+        position: fixed;
+        left: 5%;
+        right: 5%;
+        top: auto;
+        bottom: 10%;
+        transform: none;
+        width: 90%;
+        max-width: none;
+    }
+
+    .tooltip-content::before {
+        display: none;
+    }
+
+    /* Components section mobile */
+    .components-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .component-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.25rem;
+    }
+
+    .card-name,
+    .card-role {
+        flex: none;
+        min-width: auto;
+    }
+
+    /* Compliance section mobile */
+    .compliance-diagram {
+        padding: 0 0.5rem;
+    }
+
+    .zone {
+        padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .zone-info {
+        align-items: center;
+    }
+
+    .conduit {
+        font-size: 0.65rem;
+    }
+
+    /* Toolchain section mobile */
+    .toolchain-diagram {
+        max-width: 100%;
+        padding: 0 0.5rem;
+    }
+
+    .tool-box {
+        padding: 1rem;
+    }
+
+    .tool-icon {
+        font-size: 1.5rem !important;
+    }
+
+    .tool-name {
+        font-size: 1rem !important;
+    }
+
+    .tool-features li {
+        font-size: 0.8rem;
+    }
+}

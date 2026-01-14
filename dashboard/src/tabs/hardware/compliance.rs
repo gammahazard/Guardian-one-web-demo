@@ -1,40 +1,53 @@
-// what: iec 62443 compliance visualization section
-// why: demonstrates understanding of industrial security standards and zone model
-// relations: used by hardware/component.rs, shows security architecture from architecture diagram
+// what: iec 62443 compliance visualization section with tooltips
+// why: demonstrates understanding of industrial security standards with educational tooltips
+// relations: used by hardware/component.rs, shows security architecture
 
 use leptos::*;
 
-/// renders iec 62443 zone and conduit model diagram
+// zone tooltip constants
+const ZONE3_TOOLTIP: &str = "Enterprise IT Zone (Low Risk): Contains monitoring and analytics systems. Fully isolated from industrial control via network segmentation.";
+const ZONE2_TOOLTIP: &str = "Guardian Cluster DMZ: The WASM runtime acts as a security boundary. Workers are compiled to WebAssembly and execute in a sandboxed environment. WASI (WebAssembly System Interface) provides capability-based security: each module must be explicitly granted access to specific resources like Modbus, GPIO, or Network. This is fundamentally different from containers which inherit host kernel trust.";
+const ZONE1_TOOLTIP: &str = "Industrial Control Zone (High Risk): Contains the PLC and field devices. Only validated commands from Zone 2 can reach this zone via Modbus RTU.";
+
+/// renders iec 62443 zone and conduit model diagram with tooltips
 #[component]
 pub fn ComplianceSection() -> impl IntoView {
     view! {
         <div class="compliance-section">
             <h3>"IEC 62443 Zone & Conduit Model"</h3>
+            <p class="section-hint">"💡 Hover over each zone for security details"</p>
             
             <div class="compliance-diagram">
                 // zone 3: enterprise it (green - low risk)
                 <SecurityZone 
                     color="green" 
                     name="Zone 3: Enterprise IT" 
-                    desc="Grafana, InfluxDB, QNAP NAS" 
+                    desc="Grafana, InfluxDB, QNAP NAS"
+                    tooltip=ZONE3_TOOLTIP
                 />
                 
-                <div class="conduit">"┃ Encrypted TLS (Historian API) ┃"</div>
+                <div class="conduit" title="Encrypted TLS connection for historian data upload">
+                    "┃ Encrypted TLS (Historian API) ┃"
+                </div>
                 
                 // zone 2: dmz / guardian cluster (yellow - medium risk)
                 <SecurityZone 
                     color="yellow" 
                     name="Zone 2: DMZ / Guardian Cluster" 
-                    desc="WASM Runtime enforces capability boundary" 
+                    desc="WASM Runtime enforces capability boundary"
+                    tooltip=ZONE2_TOOLTIP
                 />
                 
-                <div class="conduit">"┃ WIT Contract (Modbus only) ┃"</div>
+                <div class="conduit" title="WIT contract validation - only explicitly granted capabilities pass through">
+                    "┃ WIT Contract (Modbus only) ┃"
+                </div>
                 
                 // zone 1: industrial control (red - high risk)
                 <SecurityZone 
                     color="red" 
                     name="Zone 1: Industrial Control" 
-                    desc="S7-1200 PLC, BME280, Relays" 
+                    desc="S7-1200 PLC, BME280, Relays"
+                    tooltip=ZONE1_TOOLTIP
                 />
             </div>
             
@@ -46,24 +59,33 @@ pub fn ComplianceSection() -> impl IntoView {
     }
 }
 
-/// security zone card with color-coded risk level
+/// security zone card with color-coded risk level and tooltip
 #[component]
-fn SecurityZone(color: &'static str, name: &'static str, desc: &'static str) -> impl IntoView {
+fn SecurityZone(
+    color: &'static str, 
+    name: &'static str, 
+    desc: &'static str,
+    tooltip: &'static str,
+) -> impl IntoView {
     let badge = match color {
         "green" => "🟢",
         "yellow" => "🟡",
         "red" => "🔴",
         _ => "⚪",
     };
-    let zone_class = format!("zone {}", color);
+    let zone_class = format!("zone has-tooltip {}", color);
     
     view! {
-        <div class={zone_class}>
+        <div class={zone_class} title={tooltip}>
             <span class="zone-badge">{badge}</span>
             <div class="zone-info">
-                <span class="zone-name">{name}</span>
+                <span class="zone-name">
+                    {name}
+                    <span class="info-icon">"ⓘ"</span>
+                </span>
                 <span class="zone-desc">{desc}</span>
             </div>
+            <div class="tooltip-content">{tooltip}</div>
         </div>
     }
 }
