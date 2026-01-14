@@ -354,6 +354,63 @@ body {
     color: var(--accent-primary);
 }
 
+.terminal-line.danger {
+    color: var(--accent-danger);
+}
+
+/* Comparison Banner */
+.comparison-banner {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(124, 58, 237, 0.1));
+    border: 1px solid var(--accent-primary);
+    border-radius: 8px;
+    padding: 1rem 2rem;
+    margin: 1.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.comparison-banner .metric {
+    font-size: 1.1rem;
+}
+
+.comparison-banner .vs {
+    color: var(--text-secondary);
+}
+
+.comparison-banner .speedup {
+    color: var(--accent-success);
+    font-size: 1.2rem;
+}
+
+/* Attack Section */
+.attack-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.attack-section h3 {
+    margin-bottom: 0.5rem;
+}
+
+.attack-desc {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.attack-results {
+    margin-top: 1rem;
+}
+
+.attack-results h4 {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
 /* Demo Panels */
 .demo-panels {
     display: grid;
