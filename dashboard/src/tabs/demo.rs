@@ -17,10 +17,10 @@ struct LogEntry {
 }
 
 /// attack configuration with realistic python restart times
+#[allow(dead_code)] // restart_ms used via pyodide_load_ms fallback
 struct AttackConfig {
     name: &'static str,
-    restart_ms: u32,          // python worker restart time (ms)
-    error_msg: &'static str,
+    restart_ms: u32,          // fallback if pyodide_load_ms unavailable
     wasm_trap: &'static str,
 }
 
@@ -36,25 +36,21 @@ fn get_attack_config(attack: &str) -> AttackConfig {
         "bufferOverflow" => AttackConfig {
             name: "Buffer Overflow",
             restart_ms: 1800,
-            error_msg: "Segmentation fault (core dumped)",
             wasm_trap: "out of bounds memory access",
         },
         "dataExfil" => AttackConfig {
             name: "Data Exfiltration",
             restart_ms: 2100,
-            error_msg: "Unauthorized network connection",
             wasm_trap: "capability not granted: network",
         },
         "pathTraversal" => AttackConfig {
             name: "Path Traversal",
             restart_ms: 1500,
-            error_msg: "Unauthorized file access: /etc/passwd",
             wasm_trap: "capability not granted: filesystem",
         },
         _ => AttackConfig {
             name: "Unknown Attack",
             restart_ms: 1000,
-            error_msg: "Unknown error",
             wasm_trap: "trap",
         },
     }
@@ -213,14 +209,9 @@ extern "C" {
     #[wasm_bindgen(js_namespace = performance)]
     fn now() -> f64;
     
-    // Pyodide globals
-    #[wasm_bindgen(js_namespace = window, js_name = pyodideReady)]
-    static PYODIDE_READY: bool;
-    
-    #[wasm_bindgen(js_namespace = window, js_name = pyodideLoadTime)]
-    static PYODIDE_LOAD_TIME: f64;
-    
     // Run Python code via Pyodide
+    // Note: pyodideReady and pyodideLoadTime accessed via js_sys::Reflect
+    // to avoid deprecated JsStatic warnings
     #[wasm_bindgen(catch, js_namespace = window)]
     async fn runPython(code: &str) -> Result<JsValue, JsValue>;
 }
