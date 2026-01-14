@@ -1,0 +1,126 @@
+// what: WASI Component Model interface for attack surface control
+// why: defines capability contracts that hosts enforce at component instantiation
+// relations: used by wasm-modules/, enforced by wasmtime in hardware deployment
+//
+// NOTE: This WIT file is used by wasmtime/wasi-compatible runtimes.
+// The browser demo simulates these concepts; wasmtime enforces them.
+
+package reliability-triad:attacks@0.1.0;
+
+/// Capabilities that are DENIED to untrusted components
+/// The host only grants capabilities explicitly listed in component imports
+interface attack-surface {
+    /// Memory allocation requests - blocked if exceeds granted limit
+    /// Attack: Buffer overflow attempts unbounded allocation
+    /// Denial: Host traps with "memory limit exceeded"
+    record allocation-request {
+        size-bytes: u64,
+        reason: string,
+    }
+    
+    enum allocation-error {
+        limit-exceeded,
+        out-of-memory,
+        denied-by-policy,
+    }
+    
+    /// Network access requests - blocked if capability not granted
+    /// Attack: Data exfiltration attempts socket connection
+    /// Denial: Host traps with "capability not granted: network"
+    record socket-request {
+        address: string,
+        port: u16,
+        protocol: socket-protocol,
+    }
+    
+    enum socket-protocol {
+        tcp,
+        udp,
+    }
+    
+    enum network-error {
+        capability-not-granted,
+        address-blocked,
+        connection-refused,
+    }
+    
+    /// Filesystem access requests - blocked if path not in allowed list
+    /// Attack: Path traversal attempts to read /etc/passwd
+    /// Denial: Host traps with "capability not granted: filesystem"
+    record file-request {
+        path: string,
+        mode: access-mode,
+    }
+    
+    enum access-mode {
+        read-only,
+        read-write,
+        append,
+    }
+    
+    enum filesystem-error {
+        capability-not-granted,
+        path-not-allowed,
+        file-not-found,
+        permission-denied,
+    }
+}
+
+/// What a legitimate sensor component is allowed to import
+/// Host grants ONLY these capabilities - everything else is denied
+interface sensor-capabilities {
+    use attack-surface.{allocation-request, allocation-error};
+    
+    /// Limited memory allocation (e.g., 1MB max for sensor buffer)
+    allocate-buffer: func(request: allocation-request) -> result<u64, allocation-error>;
+    
+    /// Sensor reading (no network, no filesystem)
+    read-sensor: func(channel: u8) -> result<f64, string>;
+    
+    /// Output to pre-configured MQTT topic (host-controlled, not raw network)
+    publish-telemetry: func(topic: string, payload: list<u8>) -> result<_, string>;
+}
+
+/// 2oo3 TMR (Triple Modular Redundancy) voting interface
+/// Used by the host to run three instances and compare outputs
+interface tmr-voting {
+    /// Each instance processes the same input
+    record instance-output {
+        instance-id: u8,
+        result: list<u8>,
+        execution-time-us: u64,
+    }
+    
+    enum vote-result {
+        unanimous,        // All 3 agree
+        majority,         // 2 agree, 1 disagrees (faulty instance identified)
+        no-consensus,     // All 3 disagree (critical failure)
+    }
+    
+    /// Host runs 3 instances, collects outputs, returns vote
+    vote: func(outputs: list<instance-output>) -> vote-result;
+    
+    /// Rebuild a faulty instance (near-instant with WASM)
+    rebuild-instance: func(instance-id: u8) -> result<u64, string>;
+}
+
+/// World definition: what a sensor component exports and imports
+world sensor-component {
+    /// Component IMPORTS (what host provides)
+    import sensor-capabilities;
+    
+    /// Component EXPORTS (what component provides to host)
+    export process-reading: func(raw-value: f64) -> result<f64, string>;
+    export get-health-status: func() -> string;
+}
+
+/// World for attack demonstration
+world attack-demo {
+    /// These imports would be DENIED by a correctly configured host
+    import attack-surface;
+    
+    /// Attempting to use any of these results in a trap
+    export attempt-buffer-overflow: func() -> result<string, string>;
+    export attempt-data-exfil: func() -> result<string, string>;
+    export attempt-path-traversal: func() -> result<string, string>;
+}

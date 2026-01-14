@@ -896,6 +896,19 @@ result
                         "🔄 Reset"
                     </button>
                 </div>
+                
+                // Info box explaining browser vs wasmtime
+                <div class="info-box">
+                    <h4>"ℹ️ About This Demo"</h4>
+                    <p>"This browser demo "<strong>"demonstrates concepts"</strong>" using Pyodide (Python) and WebAssembly."</p>
+                    <ul>
+                        <li><strong>"Python attacks:"</strong>" Run real code via Pyodide, producing genuine exceptions"</li>
+                        <li><strong>"WASM traps:"</strong>" Simulated to show what wasmtime enforces via WIT contracts"</li>
+                        <li><strong>"2oo3 TMR:"</strong>" Visualizes Triple Modular Redundancy voting pattern"</li>
+                    </ul>
+                    <p class="hardware-note">"🔧 "<strong>"In hardware deployment:"</strong>" wasmtime enforces WIT capability contracts at component instantiation. The same WIT file ("<code>"wit/attacks.wit"</code>") defines what's denied."</p>
+                    <p class="raft-note">"🗳️ "<strong>"Raft Consensus:"</strong>" Enables leader election and log replication across distributed nodes. WASM makes Raft more resilient—crashed nodes rebuild in 0.04ms vs 1.5s for Python processes."</p>
+                </div>
             </div>
         </div>
     }
