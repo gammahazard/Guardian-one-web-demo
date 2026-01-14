@@ -288,9 +288,17 @@ body {
     transition: all 0.2s;
 }
 
-.attack-btn:hover {
+.attack-btn:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.attack-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    filter: grayscale(50%);
 }
 
 .attack-btn.run-all {
@@ -1355,4 +1363,144 @@ body {
     padding-top: 0.75rem;
     border-top: 1px solid rgba(59, 130, 246, 0.2);
     font-style: italic;
+}
+
+/* ============================================================================
+   Grouped Attack Sections - Security & Availability
+   ============================================================================ */
+
+.attack-group {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.attack-group h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Security group - red/orange accent */
+.security-group {
+    border-left: 4px solid var(--accent-danger);
+}
+
+/* Availability group - blue/cyan accent */
+.availability-group {
+    border-left: 4px solid var(--accent-primary);
+}
+
+.attack-badge {
+    font-size: 0.7rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.security-group .attack-badge {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+}
+
+.availability-group .attack-badge {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+}
+
+/* Leader attack buttons - slightly different styling */
+.attack-btn.leader-btn {
+    background: linear-gradient(135deg, var(--accent-primary), #6366f1);
+}
+
+.attack-btn.leader-btn:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Attack actions container (below both groups) */
+.attack-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+}
+
+/* Info sections within info-box */
+.info-section {
+    margin: 1rem 0;
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.info-section h5 {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.info-section ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.wit-note {
+    margin-top: 1rem !important;
+}
+
+/* Action buttons (Run All, Reset) */
+.action-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.action-btn.runall {
+    background: linear-gradient(135deg, #f59e0b, #dc2626);
+}
+
+.action-btn.reset {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+.action-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    filter: grayscale(50%);
+}
+
+.wit-subnote {
+    margin-top: 0.25rem !important;
+    margin-left: 1rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(59, 130, 246, 0.05);
+    border-left: 2px solid rgba(59, 130, 246, 0.3);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.wit-subnote code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-family: 'Fira Code', monospace;
 }

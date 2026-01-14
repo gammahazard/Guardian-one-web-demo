@@ -52,6 +52,21 @@ fn get_attack_config(attack: &str) -> AttackConfig {
             wasm_trap: "capability not granted: filesystem",
             wit_func: "read-file()",
         },
+        // ================================================================
+        // Availability attacks (Raft leader election)
+        // ================================================================
+        "killLeader" => AttackConfig {
+            name: "Kill Leader",
+            restart_ms: 1500,
+            wasm_trap: "leader instance terminated",
+            wit_func: "(N/A - crash scenario)",
+        },
+        "heartbeatTimeout" => AttackConfig {
+            name: "Heartbeat Timeout",
+            restart_ms: 2000,
+            wasm_trap: "leader unresponsive",
+            wit_func: "(N/A - network scenario)",
+        },
         _ => AttackConfig {
             name: "Unknown Attack",
             restart_ms: 1000,
@@ -195,8 +210,9 @@ targets = [
 ]
 print(f"[ATTACK] Probing {len(targets)} paths...")
 
-accessed = []
-blocked = []
+readable = []  # Files successfully read
+exists_only = []  # Files exist but couldn't read
+blocked = []  # Files blocked by sandbox
 
 for path in targets:
     try:
@@ -205,10 +221,10 @@ for path in targets:
             try:
                 with open(path, 'r') as f:
                     content = f.read(64)
-                accessed.append(path)
+                readable.append(path)
                 print(f"[EXFIL] Read from {path}")
             except PermissionError:
-                accessed.append(f"{path} (no read)")
+                exists_only.append(path)
         else:
             blocked.append(path)
     except OSError as e:
@@ -216,15 +232,16 @@ for path in targets:
 
 elapsed = (time.perf_counter() - start) * 1000
 
-if any("[EXFIL]" in str(accessed)):
-    result = f"VULNERABLE|FileRead|Read {len(accessed)} files!|{elapsed:.1f}ms"
-elif accessed:
-    result = f"PARTIAL|PermissionError|{len(accessed)} paths exist but unreadable|{elapsed:.1f}ms"
+if readable:
+    result = f"VULNERABLE|FileRead|Read {len(readable)} files!|{elapsed:.1f}ms"
+elif exists_only:
+    result = f"PARTIAL|PermissionError|{len(exists_only)} paths exist but unreadable|{elapsed:.1f}ms"
 else:
     result = f"BLOCKED|OSError|All {len(targets)} paths blocked by sandbox|{elapsed:.1f}ms"
 
 result
 "#;
+
 
 /// Get the Python attack code for the given attack type
 fn get_attack_code(attack: &str) -> &'static str {
@@ -350,6 +367,7 @@ pub fn Demo() -> impl IntoView {
     // control state
     // ========================================================================
     let (is_running, set_is_running) = create_signal(false);
+    let (running_all, set_running_all) = create_signal(false);  // Track "run all attacks" mode
     let (selected_attack, set_selected_attack) = create_signal("bufferOverflow".to_string());
     
     // ========================================================================
@@ -507,8 +525,9 @@ result
     // attack handler (REAL pyodide execution)
     // ========================================================================
     let trigger_attack = move |_| {
-        if is_running.get() { return; }
-        set_is_running.set(true);
+        // Allow if running_all mode (called from run_all_attacks), otherwise block if already running
+        if is_running.get() && !running_all.get() { return; }
+        if !running_all.get() { set_is_running.set(true); }
         
         let attack = selected_attack.get();
         let config = get_attack_config(&attack);
@@ -543,12 +562,15 @@ result
         });
         
         // Use REAL Pyodide load time as restart time (represents actual Python cold-start)
-        // Falls back to config value if Pyodide hasn't loaded yet
-        let restart_ms = if pyodide_load_ms.get() > 0.0 {
-            pyodide_load_ms.get() as u32
+        // Add ±200ms jitter for realistic variance
+        let base_restart = if pyodide_load_ms.get() > 0.0 {
+            pyodide_load_ms.get() as i32
         } else {
-            config.restart_ms
+            config.restart_ms as i32
         };
+        // Random jitter: -200 to +200ms
+        let jitter = ((js_sys::Math::random() * 400.0) - 200.0) as i32;
+        let restart_ms = (base_restart + jitter).max(500) as u32; // Min 500ms
         let wasm_trap = config.wasm_trap.to_string();
         let wit_func = config.wit_func.to_string();
         let attack_code_owned = attack_code.to_string();
@@ -588,23 +610,11 @@ result
                             level: "error".into(), 
                             message: format!("💥 W{} CRASHED after {:.1}ms - real Python exception!", current_active, py_elapsed)
                         });
-                        // Show voting failure - no output from crashed worker
-                        let sensor_val = 42.0 + (js_sys::Math::random() * 0.5);
+                        // Simplified crash response - no confusing voting language
+                        let next_worker = (current_active + 1) % 3;
                         logs.push(LogEntry { 
                             level: "warn".into(), 
-                            message: "[VOTE] Attempting 2oo3 consensus...".into()
-                        });
-                        logs.push(LogEntry { 
-                            level: "error".into(), 
-                            message: format!("[OUT] W0: - | W1: {:.1}°C | W2: {:.1}°C", sensor_val, sensor_val)
-                        });
-                        logs.push(LogEntry { 
-                            level: "error".into(), 
-                            message: format!("[VOTE] W{} produced NO OUTPUT (crashed) - can't compare!", current_active)
-                        });
-                        logs.push(LogEntry { 
-                            level: "error".into(), 
-                            message: "[VOTE] BLOCKED - need 3 outputs to vote, only have 2".into()
+                            message: format!("[POOL] Failing over to W{} (standby → active)", next_worker)
                         });
                     });
                 }
@@ -620,23 +630,11 @@ result
                             level: "error".into(), 
                             message: format!("💥 W{} CRASHED - process terminated!", current_active)
                         });
-                        // Show voting failure - no output from crashed worker
-                        let sensor_val = 42.0 + (js_sys::Math::random() * 0.5);
+                        // Simplified crash response - no confusing voting language
+                        let next_worker = (current_active + 1) % 3;
                         logs.push(LogEntry { 
                             level: "warn".into(), 
-                            message: "[VOTE] Attempting 2oo3 consensus...".into()
-                        });
-                        logs.push(LogEntry { 
-                            level: "error".into(), 
-                            message: format!("[OUT] W0: - | W1: {:.1}°C | W2: {:.1}°C", sensor_val, sensor_val)
-                        });
-                        logs.push(LogEntry { 
-                            level: "error".into(), 
-                            message: format!("[VOTE] W{} produced NO OUTPUT - can't compare 3 values!", current_active)
-                        });
-                        logs.push(LogEntry { 
-                            level: "error".into(), 
-                            message: "[VOTE] BLOCKED - respawning worker to restore voting (1.5s)".into()
+                            message: format!("[POOL] Failing over to W{} (standby → active)", next_worker)
                         });
                     });
                 }
@@ -667,7 +665,8 @@ result
                         message: "[VOTE] 3/3 workers ready - voting now possible".into()
                     });
                 });
-                set_is_running.set(false);
+                // Only reset is_running if not in running_all mode
+                if !running_all.get() { set_is_running.set(false); }
             }, std::time::Duration::from_millis(restart_ms as u64));
         });
         
@@ -684,33 +683,19 @@ result
             
             let healthy: Vec<u8> = (0..3).filter(|&i| i != faulty_idx).collect();
             
-            // Check if faulty instance is the leader - elect new leader
-            let current_leader = leader_id.get();
             // Generate simulated sensor value for demonstration
             let sensor_val = 42.0 + (js_sys::Math::random() * 0.5);
-            if faulty_idx == current_leader {
-                // Elect first healthy node as new leader
-                let new_leader = healthy[0];
-                set_leader_id.set(new_leader);
-                set_wasm_logs.update(|logs| {
-                    logs.push(LogEntry { level: "warn".into(), message: format!("[TRAP] I{}: {}", faulty_idx, wasm_trap) });
-                    logs.push(LogEntry { level: "info".into(), message: format!("[WIT] attack-surface.{} blocked → capability not imported", wit_func) });
-                    logs.push(LogEntry { level: "warn".into(), message: format!("[RAFT] Leader I{} failed! Electing new leader...", faulty_idx) });
-                    logs.push(LogEntry { level: "success".into(), message: format!("[RAFT] I{} elected as new leader in 0.04ms", new_leader) });
-                    // Show actual output comparison
-                    logs.push(LogEntry { level: "info".into(), message: format!("[OUT] I{}: TRAP | I{}: {:.1}°C | I{}: {:.1}°C", faulty_idx, healthy[0], sensor_val, healthy[1], sensor_val) });
-                    logs.push(LogEntry { level: "success".into(), message: format!("[VOTE] 2/3 outputs agree ({:.1}°C) - using majority value", sensor_val) });
-                });
-            } else {
-                set_wasm_logs.update(|logs| {
-                    logs.push(LogEntry { level: "warn".into(), message: format!("[TRAP] I{}: {}", faulty_idx, wasm_trap) });
-                    logs.push(LogEntry { level: "info".into(), message: format!("[WIT] attack-surface.{} blocked → capability not imported", wit_func) });
-                    // Show actual output comparison
-                    logs.push(LogEntry { level: "info".into(), message: format!("[OUT] I{}: {:.1}°C | I{}: {:.1}°C | I{}: TRAP", healthy[0], sensor_val, healthy[1], sensor_val, faulty_idx) });
-                    logs.push(LogEntry { level: "success".into(), message: format!("[VOTE] 2/3 outputs agree ({:.1}°C) - using majority value", sensor_val) });
-                    logs.push(LogEntry { level: "success".into(), message: "[OK] Zero downtime - continues with valid output".into() });
-                });
-            }
+            
+            // WIT blocks the attack - instance returns TRAP as output, voting handles it
+            // No leader election needed - the instance isn't dead, just this call was blocked
+            set_wasm_logs.update(|logs| {
+                logs.push(LogEntry { level: "warn".into(), message: format!("[TRAP] I{}: {}", faulty_idx, wasm_trap) });
+                logs.push(LogEntry { level: "info".into(), message: format!("[WIT] attack-surface.{} blocked → capability not imported", wit_func) });
+                // Show actual output comparison
+                logs.push(LogEntry { level: "info".into(), message: format!("[OUT] I{}: TRAP | I{}: {:.1}°C | I{}: {:.1}°C", faulty_idx, healthy[0], sensor_val, healthy[1], sensor_val) });
+                logs.push(LogEntry { level: "success".into(), message: format!("[VOTE] 2/3 outputs agree ({:.1}°C) - using majority value", sensor_val) });
+                logs.push(LogEntry { level: "success".into(), message: "[OK] Zero downtime - continues with valid output".into() });
+            });
             
             set_wasm_rejected.update(|n| *n += 1);
             
@@ -733,26 +718,173 @@ result
         }, std::time::Duration::from_millis(100));
     };
     
+    // ========================================================================
+    // leader crash handler (for availability attacks)
+    // ========================================================================
+    let trigger_leader_crash = move |_| {
+        // Allow if running_all mode (called from run_all_attacks), otherwise block if already running
+        if is_running.get() && !running_all.get() { return; }
+        if !running_all.get() { set_is_running.set(true); }
+        
+        let attack = selected_attack.get();
+        let is_timeout = attack == "heartbeatTimeout";
+        let current_leader_py = python_active_worker.get();
+        
+        // ================================================================
+        // Python: Leader crash requires cold-start respawn (~1.5s)
+        // ================================================================
+        set_python_logs.update(|logs| {
+            logs.push(LogEntry { 
+                level: "error".into(), 
+                message: format!("[RAFT] Leader W{} {}!", 
+                    current_leader_py,
+                    if is_timeout { "unresponsive" } else { "crashed" })
+            });
+            logs.push(LogEntry { 
+                level: "warn".into(), 
+                message: "[RAFT] Starting election...".into() 
+            });
+            logs.push(LogEntry { 
+                level: "error".into(), 
+                message: "[RAFT] Election BLOCKED — need leader respawn first".into() 
+            });
+        });
+        
+        // Mark current leader as dead
+        let mut workers = python_workers.get();
+        workers[current_leader_py as usize] = false;
+        set_python_workers.set(workers);
+        set_python_restarting.set(true);
+        
+        // Python takes real Pyodide load time to respawn + ±200ms jitter
+        let base_restart = if pyodide_load_ms.get() > 0.0 {
+            pyodide_load_ms.get() as i32
+        } else {
+            1500
+        };
+        let jitter = ((js_sys::Math::random() * 400.0) - 200.0) as i32;
+        let restart_ms = (base_restart + jitter).max(500) as u32;
+        set_python_downtime_ms.update(|d| *d += restart_ms as u64);
+        set_python_crashed.update(|n| *n += 1);
+        
+        let next_leader_py = (current_leader_py + 1) % 3;
+        set_timeout(move || {
+            set_python_workers.set([true, true, true]);
+            set_python_active_worker.set(next_leader_py);
+            set_python_restarting.set(false);
+            set_python_logs.update(|logs| {
+                logs.push(LogEntry { 
+                    level: "success".into(), 
+                    message: format!("[OK] W{} respawned ({}ms) — W{} elected as leader", 
+                        current_leader_py, restart_ms, next_leader_py)
+                });
+            });
+            // Only reset is_running if not in running_all mode
+            if !running_all.get() { set_is_running.set(false); }
+        }, std::time::Duration::from_millis(restart_ms as u64));
+        
+        // ================================================================
+        // WASM: Sub-ms leader election (Raft-like)
+        // ================================================================
+        let old_leader = leader_id.get();
+        let new_leader = (old_leader + 1) % 3;
+        
+        // Mark old leader as faulty temporarily
+        let mut states = instance_states.get();
+        states[old_leader as usize] = InstanceState::Faulty;
+        set_instance_states.set(states);
+        set_faulty_instance.set(Some(old_leader));
+        
+        set_wasm_logs.update(|logs| {
+            logs.push(LogEntry { 
+                level: "error".into(), 
+                message: format!("[RAFT] Leader I{} {}!", old_leader,
+                    if is_timeout { "missed heartbeat" } else { "crashed" })
+            });
+            logs.push(LogEntry { 
+                level: "info".into(), 
+                message: "[RAFT] Election started...".into() 
+            });
+        });
+        
+        // Measure real election time (WASM instantiate = election time)
+        spawn_local(async move {
+            let election_time = measure_instantiate_time().await;
+            
+            set_leader_id.set(new_leader);
+            set_wasm_rejected.update(|n| *n += 1);
+            
+            set_wasm_logs.update(|logs| {
+                logs.push(LogEntry { 
+                    level: "success".into(), 
+                    message: format!("[RAFT] I{} elected as new leader in {:.2}ms", new_leader, election_time)
+                });
+                logs.push(LogEntry { 
+                    level: "success".into(), 
+                    message: "[OK] Zero downtime — new leader accepting writes".into()
+                });
+            });
+            
+            // Rebuild old leader as follower
+            set_timeout(move || {
+                let mut states = instance_states.get();
+                states[old_leader as usize] = InstanceState::Healthy;
+                set_instance_states.set(states);
+                set_faulty_instance.set(None);
+                
+                set_wasm_logs.update(|logs| {
+                    logs.push(LogEntry { 
+                        level: "info".into(), 
+                        message: format!("[OK] I{} rebuilt as follower — pool healthy", old_leader)
+                    });
+                });
+            }, std::time::Duration::from_millis(50));
+        });
+    };
     
     // ========================================================================
-    // run all attacks
+    // run all attacks (all 5: security + availability)
     // ========================================================================
     let run_all_attacks = move |_| {
-        if is_running.get() { return; }
+        if is_running.get() || running_all.get() { return; }
         
-        let attacks = ["bufferOverflow", "dataExfil", "pathTraversal"];
+        // Set flags - running_all stays true throughout entire sequence
+        set_is_running.set(true);
+        set_running_all.set(true);
         
-        for (i, attack_name) in attacks.iter().enumerate() {
+        // All 5 attacks in order: Security (1-3), then Availability (4-5)
+        let attacks: [(&str, bool); 5] = [
+            ("bufferOverflow", false),   // security - use trigger_attack
+            ("dataExfil", false),        // security - use trigger_attack
+            ("pathTraversal", false),    // security - use trigger_attack
+            ("killLeader", true),        // availability - use trigger_leader_crash
+            ("heartbeatTimeout", true),  // availability - use trigger_leader_crash
+        ];
+        
+        for (i, (attack_name, is_leader_attack)) in attacks.iter().enumerate() {
             let attack = attack_name.to_string();
-            let delay = (i as u64) * 3000;
+            let is_leader = *is_leader_attack;
+            let delay = (i as u64) * 3500; // 3.5s between each attack (allow respawn)
             
             set_timeout(move || {
                 set_selected_attack.set(attack);
                 set_timeout(move || {
-                    trigger_attack(());
+                    // When running all, don't set is_running - it's managed by run_all_attacks
+                    if is_leader {
+                        trigger_leader_crash(());
+                    } else {
+                        trigger_attack(());
+                    }
                 }, std::time::Duration::from_millis(100));
             }, std::time::Duration::from_millis(delay));
         }
+        
+        // Schedule reset of running_all after all attacks complete
+        // 5 attacks * 3.5s = 17.5s + extra buffer for last attack to finish (~3s)
+        set_timeout(move || {
+            set_running_all.set(false);
+            set_is_running.set(false);
+        }, std::time::Duration::from_millis(20500));
     };
     
     // ========================================================================
@@ -768,10 +900,12 @@ result
         set_wasm_rejected.set(0);
         set_instance_states.set([InstanceState::Healthy; 3]);
         set_faulty_instance.set(None);
+        set_leader_id.set(0);  // Reset leader to I0
         set_python_workers.set([true, true, true]);
         set_python_active_worker.set(0);
         set_python_restarting.set(false);
         set_is_running.set(false);
+        set_running_all.set(false);  // Reset run-all mode
     };
 
     // ========================================================================
@@ -921,7 +1055,7 @@ result
                         }}
                     </div>
                     // instance boxes - Leader (L) + Followers (F) like Raft
-                    <div class="instances-panel" attr:data-tooltip="WASM enables fast consensus: sub-ms leader election (vs slow Python). 2oo3 voting rejects faulty instance, system continues.">
+                    <div class="instances-panel">
                         <span class="instances-label">"Nodes:"</span>
                         {move || {
                             let states = instance_states.get();
@@ -988,16 +1122,18 @@ result
                 </div>
             </div>
             
-            // attack controls
-            <div class="attack-section">
-                <h3>"☠️ Attack Scenarios"</h3>
-                <p class="section-desc">"Click an attack to simulate it, or run all sequentially"</p>
+            // ================================================================
+            // SECURITY ATTACKS SECTION
+            // ================================================================
+            <div class="attack-group security-group">
+                <h3>"☠️ Security Attacks"<span class="attack-badge">"WIT Capability Denial"</span></h3>
+                <p class="section-desc">"WASM blocks at boundary via WIT — Python crashes"</p>
                 <div class="attack-buttons">
                     <button 
                         class="attack-btn"
                         class:running=move || selected_attack.get() == "bufferOverflow" && is_running.get()
                         disabled=move || is_running.get()
-                        title="Memory corruption attack - causes process crash"
+                        title="Memory corruption attack - WIT denies malloc-large()"
                         on:click=move |_| {
                             set_selected_attack.set("bufferOverflow".to_string());
                             trigger_attack(());
@@ -1009,7 +1145,7 @@ result
                         class="attack-btn"
                         class:running=move || selected_attack.get() == "dataExfil" && is_running.get()
                         disabled=move || is_running.get()
-                        title="Attempts unauthorized network connection"
+                        title="Network exfiltration - WIT denies open-socket()"
                         on:click=move |_| {
                             set_selected_attack.set("dataExfil".to_string());
                             trigger_attack(());
@@ -1021,7 +1157,7 @@ result
                         class="attack-btn"
                         class:running=move || selected_attack.get() == "pathTraversal" && is_running.get()
                         disabled=move || is_running.get()
-                        title="Attempts to read sensitive files"
+                        title="Filesystem probe - WIT denies read-file()"
                         on:click=move |_| {
                             set_selected_attack.set("pathTraversal".to_string());
                             trigger_attack(());
@@ -1030,43 +1166,109 @@ result
                         "📁 Path Traversal"
                     </button>
                 </div>
-                <div class="attack-actions">
+            </div>
+            
+            // ================================================================
+            // AVAILABILITY ATTACKS SECTION
+            // ================================================================
+            <div class="attack-group availability-group">
+                <h3>"⚡ Availability Attacks"<span class="attack-badge">"Raft Leader Election"</span></h3>
+                <p class="section-desc">"Crash the leader — compare election recovery time"</p>
+                <div class="attack-buttons">
                     <button 
-                        class="action-btn runall" 
-                        title="Run all 3 attacks sequentially"
-                        disabled=move || is_running.get() 
-                        on:click=move |_| run_all_attacks(())
-                    >
-                        "🔥 Run All Attacks"
-                    </button>
-                    <button 
-                        class="action-btn reset" 
-                        title="Reset all stats and terminals"
+                        class="attack-btn leader-btn"
+                        class:running=move || selected_attack.get() == "killLeader" && is_running.get()
                         disabled=move || is_running.get()
-                        on:click=move |_| reset_demo(())
+                        title="Force crash on leader (simulates OOM, panic, hardware failure)"
+                        on:click=move |_| {
+                            set_selected_attack.set("killLeader".to_string());
+                            trigger_leader_crash(());
+                        }
                     >
-                        "🔄 Reset"
+                        "🗡️ Kill Leader"
                     </button>
+                    <button 
+                        class="attack-btn leader-btn"
+                        class:running=move || selected_attack.get() == "heartbeatTimeout" && is_running.get()
+                        disabled=move || is_running.get()
+                        title="Leader becomes unresponsive (simulates network partition, deadlock)"
+                        on:click=move |_| {
+                            set_selected_attack.set("heartbeatTimeout".to_string());
+                            trigger_leader_crash(());
+                        }
+                    >
+                        "⏱️ Heartbeat Timeout"
+                    </button>
+                </div>
+            </div>
+            
+            // ================================================================
+            // GLOBAL ACTIONS + INFO BOX
+            // ================================================================
+            <div class="attack-actions">
+                <button 
+                    class="action-btn runall" 
+                    title="Run all 5 attacks sequentially"
+                    disabled=move || is_running.get() 
+                    on:click=move |_| run_all_attacks(())
+                >
+                    "🔥 Run All Attacks"
+                </button>
+                <button 
+                    class="action-btn reset" 
+                    title="Reset all stats and terminals"
+                    disabled=move || is_running.get()
+                    on:click=move |_| reset_demo(())
+                >
+                    "🔄 Reset"
+                </button>
+            </div>
+            
+            // Info box with clear two-part narrative
+            <div class="info-box">
+                <h4>"ℹ️ About This Demo"<span class="demo-badge">"Browser Demonstration"</span></h4>
+                
+                <div class="info-section">
+                    <h5>"💡 Key Insight"</h5>
+                    <p>"WASM turns security attacks into "<strong>"Byzantine faults"</strong>" that "<strong>"TMR voting"</strong>" handles gracefully. The attacked instance returns TRAP (not crash), so all 3 outputs exist for comparison. Python crashes produce "<strong>"no output"</strong>", blocking consensus until respawn."</p>
                 </div>
                 
-                // Info box explaining WASI 0.2 and Byzantine fault tolerance
-                <div class="info-box">
-                    <h4>"ℹ️ About This Demo — WASI 0.2 + 2oo3 TMR "<span class="demo-badge">"Browser Demonstration"</span></h4>
-                    <p>"This visualizes "<strong>"WASI 0.2's deny-by-default security"</strong>" combined with "<strong>"2oo3 Triple Modular Redundancy"</strong>". Python exceptions are real; WASM traps show what wasmtime enforces."</p>
+                <div class="info-section">
+                    <h5>"🔒 Security Attacks (WIT Capability Denial)"</h5>
                     <ul>
-                        <li><strong>"🐍 Python:"</strong>" Real Pyodide exceptions crash workers → no output to vote on. Must wait ~1.5s to respawn before TMR works again."</li>
-                        <li><strong>"🦀 WASM:"</strong>" Simulates wasmtime trap behavior → returns 'TRAP' as output. All 3 outputs compared → 2/3 majority wins. Rebuild in sub-ms."</li>
-                        <li>
-                            <strong>"🔒 WIT Contract:"</strong>" "
-                            <a class="wit-link" href="#" on:click=move |e: web_sys::MouseEvent| {
-                                e.prevent_default();
-                                set_wit_modal_open.set(true);
-                            }>"View wit/attacks.wit"</a>
-                            " (same format used by wasmtime)"
-                        </li>
+                        <li><strong>"🐍 Python:"</strong>" Attack executes → "<strong>"exception"</strong>" → process crash → no output"</li>
+                        <li><strong>"🦀 WASM:"</strong>" "<strong>"WIT"</strong>" blocks syscall → returns "<strong>"TRAP"</strong>" → "<strong>"2oo3 voting"</strong>" excludes it → 0 downtime"</li>
                     </ul>
-                    <p class="hardware-note">"🔧 "<strong>"Coming Soon:"</strong>" Hardware demonstration on Raspberry Pi with wasmtime enforcing WIT contracts at the syscall level."</p>
                 </div>
+                
+                <div class="info-section">
+                    <h5>"⚡ Availability Attacks (Leader Failover)"</h5>
+                    <ul>
+                        <li><strong>"🐍 Python:"</strong>" Leader crash → "<strong>"cold-start"</strong>" respawn → ~1.5s election delay"</li>
+                        <li><strong>"🦀 WASM:"</strong>" Leader crash → "<strong>"sub-ms instantiate"</strong>" → new leader in ~0.04ms"</li>
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <h5>"✅ What's Real vs Simulated"</h5>
+                    <ul>
+                        <li><strong>"Real:"</strong>" Python exceptions ("<strong>"Pyodide"</strong>"), WASM timing ("<strong>"WebAssembly API"</strong>")"</li>
+                        <li><strong>"Simulated:"</strong>" WIT capability denial (real "<strong>"wasmtime"</strong>" enforces at syscall level)"</li>
+                        <li><strong>"Restart times:"</strong>" Python uses "<strong>"cold-start measured at page load"</strong>" ±200ms jitter. WASM rebuild is measured fresh each attack."</li>
+                    </ul>
+                </div>
+                
+                <p class="wit-note">
+                    <strong>"🔒 WIT Contract:"</strong>" "
+                    <a class="wit-link" href="#" on:click=move |e: web_sys::MouseEvent| {
+                        e.prevent_default();
+                        set_wit_modal_open.set(true);
+                    }>"View wit/attacks.wit"</a>
+                    " — defines the "<strong>"capability boundary"</strong>" (same format used by wasmtime)"
+                </p>
+                <p class="wit-subnote">"↳ "<em>"Note: "</em><code>"attack-surface"</code>" import is for browser simulation only. On "<strong>"Raspberry Pi + wasmtime"</strong>", this capability would simply "<strong>"not be granted"</strong>" — any call traps immediately at the host boundary."</p>
+                
+                <p class="hardware-note">"🔧 "<strong>"Coming Soon:"</strong>" Hardware demo on "<strong>"Raspberry Pi"</strong>" with "<strong>"wasmtime"</strong>" enforcing WIT at syscall level."</p>
             </div>
             
             // WIT Code Modal
