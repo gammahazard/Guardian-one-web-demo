@@ -1,6 +1,6 @@
 // what: problem tab component explaining why traditional ics security fails
 // why: sets up the narrative before showing the solution
-// relations: used by lib.rs, first tab in story flow
+// relations: used by mod.rs, first tab in story flow
 
 use leptos::*;
 

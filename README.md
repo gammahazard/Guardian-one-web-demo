@@ -2,7 +2,7 @@
 
 **Industrial Edge Security Demonstration — Python vs WASM Side-by-Side**
 
-[![Status](https://img.shields.io/badge/status-in_development-yellow.svg)]()
+[![Status](https://img.shields.io/badge/status-demo_complete-green.svg)]()
 [![Rust](https://img.shields.io/badge/Rust-1.75+-orange.svg)](https://www.rust-lang.org/)
 [![WASI](https://img.shields.io/badge/WASI-0.2-blueviolet.svg)](https://wasi.dev/)
 [![Leptos](https://img.shields.io/badge/Leptos-0.6-blue.svg)](https://leptos.dev/)
@@ -17,9 +17,19 @@
 | Challenge | Industry Today | WASI 0.2 Approach |
 |:----------|:---------------|:------------------|
 | **Isolation** | Docker namespaces (shared kernel) | WASM sandbox (boundary separation) |
-| **Fault Recovery** | Process restart (2-3 seconds) | Instance re-instantiation (~0.2ms) |
+| **Fault Recovery** | Process restart (~1.5s cold-start) | Instance re-instantiation (~0.03ms) |
 | **Binary Size** | 50-500 MB container images | 15-70 KB component binaries |
 | **Security Model** | Allow-then-block (iptables) | Deny-by-default (capability-based) |
+
+---
+
+## Live Demo Features
+
+- **Real Pyodide Execution** — Python attacks run via actual Pyodide runtime
+- **Real WASM Measurements** — Instantiation times measured with WebAssembly API
+- **2oo3 TMR Voting** — Demonstrates Byzantine fault tolerance
+- **Raft-like Leader Election** — Sub-ms failover vs ~1.5s Python respawn
+- **WIT Contract Modal** — View the actual capability boundary definition
 
 ---
 
@@ -43,14 +53,12 @@
 
 ## Dashboard Tabs
 
-The console uses a **narrative-driven** approach to walk viewers through the systems engineering lifecycle:
-
-| Tab | Purpose |
-|-----|---------|
-| **The Problem** | Why traditional ICS security fails — attack surface comparison |
-| **The Hardware** | Architecture we're simulating — Purdue Model zones |
-| **The Demo** | Live Python (Pyodide) vs WASM comparison with attack scenarios |
-| **The Proof** | Metrics, hardware videos, links to foundation projects |
+| Tab | Purpose | Status |
+|-----|---------|--------|
+| **The Problem** | Why traditional ICS security fails — attack surface comparison | ✅ Complete |
+| **The Hardware** | Architecture we're simulating — Purdue Model zones | 🔄 In Progress |
+| **The Demo** | Live Python (Pyodide) vs WASM with attack scenarios | ✅ Complete |
+| **The Proof** | Metrics simulation, foundation projects links | ✅ Complete |
 
 ---
 
@@ -61,7 +69,7 @@ The console uses a **narrative-driven** approach to walk viewers through the sys
 cargo install trunk
 
 # Run locally
-cd dashboard && trunk serve
+cd dashboard && trunk serve --open
 # Opens http://localhost:8080
 ```
 
@@ -71,17 +79,28 @@ cd dashboard && trunk serve
 
 ```
 reliability-triad/
-├── dashboard/           # Leptos frontend
+├── dashboard/               # Leptos frontend
 │   └── src/
-│       ├── tabs/        # Story-driven tab components
-│       └── components/  # Reusable UI widgets
-├── wasm-modules/        # Rust WASM components
-│   ├── sensor-driver/   # BME280 telemetry logic
-│   └── modbus-parser/   # Industrial protocol parser
-├── python-equivalents/  # Python code for Pyodide comparison
-├── wit/                 # WASI interface definitions
-├── diagrams/            # Architecture diagrams
-└── docs/                # Deep-dive documentation
+│       └── tabs/            # Story-driven tab components
+│           ├── problem/     # Tab 1: Problem explanation
+│           ├── hardware/    # Tab 2: Architecture diagram
+│           ├── demo/        # Tab 3: Interactive attack demo
+│           │   ├── types.rs
+│           │   ├── attacks.rs
+│           │   ├── wasm.rs
+│           │   └── component.rs
+│           └── proof/       # Tab 4: Metrics & foundation projects
+├── wasm-modules/            # Rust WASM components
+│   ├── sensor-driver/       # BME280 telemetry logic
+│   └── modbus-parser/       # Industrial protocol parser
+├── python-equivalents/      # Python code for Pyodide comparison
+│   ├── sensor_driver.py
+│   ├── modbus_parser.py
+│   └── attacks/             # Attack scenario scripts
+├── wit/                     # WASI interface definitions
+│   └── attacks.wit          # Capability boundary contract
+├── diagrams/                # Architecture diagrams
+└── vercel.json              # Deployment configuration
 ```
 
 ---
@@ -90,11 +109,12 @@ reliability-triad/
 
 | Source | Measurement Method |
 |--------|-------------------|
-| **WASM** | Live measurement with `performance.now()` |
-| **Python** | Real Pyodide execution in browser |
-| **Binary sizes** | Actual `.wasm` file sizes |
+| **WASM Cold-Start** | Live measurement with `WebAssembly.instantiate()` (10 iterations avg) |
+| **Python Cold-Start** | Real Pyodide reload measured fresh each simulation |
+| **Attack Exceptions** | Real Python execution via Pyodide — actual exceptions |
+| **Binary sizes** | Static values (actual `.wasm` file sizes) |
 
-> Python "industry estimates" are clearly labeled; WASM values are measured live.
+> All timing values are measured live in your browser. Python restart times use real Pyodide cold-start ± 200ms jitter for realistic variance.
 
 ---
 
@@ -119,20 +139,10 @@ feature/*   feature/* feature/*
 | [ICS Guardian](https://github.com/gammahazard/vanguard-ics-guardian) | **Containment** — Capability sandboxing | [Live](https://vanguard-ics-guardian.vercel.app) |
 | [Protocol Gateway](https://github.com/gammahazard/protocol-gateway-sandbox) | **Availability** — 2oo3 crash recovery | [Live](https://protocol-gateway-sandbox.vercel.app) |
 | [Raft Consensus](https://github.com/gammahazard/Raft-Consensus) | **Consistency** — Distributed consensus | [Live](https://raft-consensus.vercel.app) |
-| [Guardian-One](https://github.com/gammahazard/guardian-one) | Hardware implementation | *Requires hardware* |
-
----
-
-## 📚 Documentation
-
-| Document | Description |
-|----------|-------------|
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design and component interactions |
-| [SECURITY.md](docs/SECURITY.md) | Capability model and threat analysis |
-| [BRANCHING.md](docs/BRANCHING.md) | Git workflow and merge policies |
 
 ---
 
 ## License
 
 MIT © 2026
+

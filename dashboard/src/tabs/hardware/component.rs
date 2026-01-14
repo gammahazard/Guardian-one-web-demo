@@ -1,6 +1,6 @@
 // what: hardware tab showing the physical architecture being simulated
 // why: grounds the demo in real industrial edge topology
-// relations: used by lib.rs, references diagrams/, second tab in story flow
+// relations: used by mod.rs, second tab in story flow
 
 use leptos::*;
 

@@ -1,12 +1,12 @@
 // what: proof tab showing real measured performance comparisons
 // why: provides verified metrics with a simulation button for live measurement
-// relations: used by lib.rs, final tab in story flow, uses same measurement code as demo.rs
+// relations: used by mod.rs, final tab in story flow
 
 use leptos::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
-// Minimal WASM module for instantiation timing (same as demo.rs)
+// Minimal WASM module for instantiation timing
 const MINIMAL_WASM: &[u8] = &[
     0x00, 0x61, 0x73, 0x6d, // magic
     0x01, 0x00, 0x00, 0x00, // version
