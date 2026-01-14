@@ -329,7 +329,14 @@ body {
 .cve-id {
     font-family: monospace;
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: var(--accent-primary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.cve-id:hover {
+    color: var(--accent-secondary);
+    text-decoration: underline;
 }
 
 .severity-badge {

@@ -8,14 +8,17 @@ use leptos::*;
 const CVE_LEAKY_VESSELS: &str = "CVE-2024-21626";
 const CVE_LEAKY_DESC: &str = "runc container escape — attackers can access host filesystem via file descriptor manipulation";
 const CVE_LEAKY_SCORE: &str = "8.6";
+const CVE_LEAKY_URL: &str = "https://nvd.nist.gov/vuln/detail/CVE-2024-21626";
 
 const CVE_BUILDKIT_RACE: &str = "CVE-2024-23651";
 const CVE_BUILDKIT_DESC: &str = "Symlink race condition during Docker build allows reading host files";
 const CVE_BUILDKIT_SCORE: &str = "7.4";
+const CVE_BUILDKIT_URL: &str = "https://nvd.nist.gov/vuln/detail/CVE-2024-23651";
 
 const CVE_DESKTOP: &str = "CVE-2025-9074";
 const CVE_DESKTOP_DESC: &str = "Docker Desktop escape — malicious container gains full host access without authentication";
 const CVE_DESKTOP_SCORE: &str = "9.3";
+const CVE_DESKTOP_URL: &str = "https://nvd.nist.gov/vuln/detail/CVE-2025-9074";
 
 /// renders the vulnerabilities section with CVE cards and ICS stats
 #[component]
@@ -32,6 +35,7 @@ pub fn VulnerabilitiesSection() -> impl IntoView {
                     desc=CVE_LEAKY_DESC
                     score=CVE_LEAKY_SCORE
                     severity="critical"
+                    url=CVE_LEAKY_URL
                 />
                 <CveCard 
                     cve=CVE_BUILDKIT_RACE
@@ -39,6 +43,7 @@ pub fn VulnerabilitiesSection() -> impl IntoView {
                     desc=CVE_BUILDKIT_DESC
                     score=CVE_BUILDKIT_SCORE
                     severity="high"
+                    url=CVE_BUILDKIT_URL
                 />
                 <CveCard 
                     cve=CVE_DESKTOP
@@ -46,6 +51,7 @@ pub fn VulnerabilitiesSection() -> impl IntoView {
                     desc=CVE_DESKTOP_DESC
                     score=CVE_DESKTOP_SCORE
                     severity="critical"
+                    url=CVE_DESKTOP_URL
                 />
             </div>
             
@@ -80,7 +86,7 @@ pub fn VulnerabilitiesSection() -> impl IntoView {
     }
 }
 
-/// individual CVE card with severity badge
+/// individual CVE card with severity badge and NVD link
 #[component]
 fn CveCard(
     cve: &'static str,
@@ -88,12 +94,13 @@ fn CveCard(
     desc: &'static str,
     score: &'static str,
     severity: &'static str,
+    url: &'static str,
 ) -> impl IntoView {
     let badge_class = format!("severity-badge {}", severity);
     view! {
         <div class="cve-card">
             <div class="cve-header">
-                <span class="cve-id">{cve}</span>
+                <a href={url} target="_blank" rel="noopener" class="cve-id">{cve}</a>
                 <span class={badge_class}>"CVSS " {score}</span>
             </div>
             <div class="cve-name">{name}</div>
