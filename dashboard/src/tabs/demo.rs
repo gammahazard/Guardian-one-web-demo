@@ -464,7 +464,13 @@ result
             logs.push(LogEntry { level: "warn".into(), message: format!("[ATTACK] Incoming: {}", config.name) });
         });
         
-        let restart_ms = config.restart_ms;
+        // Use REAL Pyodide load time as restart time (represents actual Python cold-start)
+        // Falls back to config value if Pyodide hasn't loaded yet
+        let restart_ms = if pyodide_load_ms.get() > 0.0 {
+            pyodide_load_ms.get() as u32
+        } else {
+            config.restart_ms
+        };
         let wasm_trap = config.wasm_trap.to_string();
         let attack_code_owned = attack_code.to_string();
         
@@ -771,7 +777,7 @@ result
                         }}
                     </div>
                     // instance boxes
-                    <div class="instances-panel">
+                    <div class="instances-panel" title="2oo3 is practical with WASM: 0.04ms instantiation, ~2MB per instance. Python 2oo3 would need 3x ~45MB workers with 1.5s respawn.">
                         <span class="instances-label">"2oo3 TMR:"</span>
                         {move || {
                             let states = instance_states.get();

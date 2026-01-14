@@ -5,7 +5,6 @@
 use leptos::*;
 
 mod tabs;
-mod components;
 
 use tabs::{problem::Problem, hardware::Hardware, demo::Demo, proof::Proof};
 
