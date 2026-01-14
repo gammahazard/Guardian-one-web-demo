@@ -33,6 +33,17 @@ pub fn Demo() -> impl IntoView {
         ("$ Waiting for attack simulation...".to_string(), "info"),
     ]);
     
+    // Worker status: (name, status) - status: "ok", "down", "active"
+    let (py_workers, set_py_workers) = create_signal(vec![
+        ("W0", "ok"), ("W1", "ok"), ("W2", "ok"),
+    ]);
+    let (wasm_instances, set_wasm_instances) = create_signal(vec![
+        ("I0", "ok"), ("I1", "ok"), ("I2", "ok"),
+    ]);
+    
+    // Attack comparison state
+    let (attack_ran, set_attack_ran) = create_signal(false);
+    
     // WASM run handler
     let run_wasm = move |_| {
         let start = web_sys::window()
@@ -214,7 +225,14 @@ pub fn Demo() -> impl IntoView {
                         "📁 Path Traversal"
                     </button>
                     <button class="attack-btn run-all" on:click=move |_| {
-                        // Run all attacks sequentially with delays
+                        // Set workers to active state first
+                        set_py_workers.set(vec![
+                            ("W0", "active"), ("W1", "ok"), ("W2", "ok"),
+                        ]);
+                        set_wasm_instances.set(vec![
+                            ("I0", "active"), ("I1", "active"), ("I2", "active"),
+                        ]);
+                        
                         set_attack_output_py.set(vec![
                             ("$ Running all attack scenarios...".to_string(), "warning"),
                         ]);
@@ -223,13 +241,22 @@ pub fn Demo() -> impl IntoView {
                         ]);
                         
                         let cb = Closure::wrap(Box::new(move || {
-                            // Show summary after all attacks
+                            // Set Python workers to crashed
+                            set_py_workers.set(vec![
+                                ("W0", "down"), ("W1", "down"), ("W2", "down"),
+                            ]);
+                            // WASM instances stay OK
+                            set_wasm_instances.set(vec![
+                                ("I0", "ok"), ("I1", "ok"), ("I2", "ok"),
+                            ]);
+                            set_attack_ran.set(true);
+                            
                             set_attack_output_py.set(vec![
                                 ("━━━ ATTACK SUMMARY ━━━".to_string(), ""),
                                 ("".to_string(), ""),
-                                ("Worker 1: 💥 CRASHED (buffer overflow)".to_string(), "danger"),
-                                ("Worker 2: 📤 COMPROMISED (data exfil)".to_string(), "danger"),
-                                ("Worker 3: 📁 BREACHED (path traversal)".to_string(), "danger"),
+                                ("W0: 💥 CRASHED (buffer overflow)".to_string(), "danger"),
+                                ("W1: 📤 COMPROMISED (data exfil)".to_string(), "danger"),
+                                ("W2: 📁 BREACHED (path traversal)".to_string(), "danger"),
                                 ("".to_string(), ""),
                                 ("⚠️ Total downtime: 5.4s".to_string(), "warning"),
                                 ("⚠️ Telemetry lost: 127 packets".to_string(), "warning"),
@@ -237,9 +264,9 @@ pub fn Demo() -> impl IntoView {
                             set_attack_output_wasm.set(vec![
                                 ("━━━ ATTACK SUMMARY ━━━".to_string(), ""),
                                 ("".to_string(), ""),
-                                ("Attack 1: ✅ TRAPPED (memory bounds)".to_string(), "success"),
-                                ("Attack 2: ✅ BLOCKED (no network cap)".to_string(), "success"),
-                                ("Attack 3: ✅ DENIED (no fs cap)".to_string(), "success"),
+                                ("I0: ✅ TRAPPED (memory bounds)".to_string(), "success"),
+                                ("I1: ✅ BLOCKED (no network cap)".to_string(), "success"),
+                                ("I2: ✅ DENIED (no fs cap)".to_string(), "success"),
                                 ("".to_string(), ""),
                                 ("✅ Total downtime: 0.54ms".to_string(), "success"),
                                 ("✅ Telemetry lost: 0 packets".to_string(), "success"),
