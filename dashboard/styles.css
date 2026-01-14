@@ -350,6 +350,10 @@ body {
     color: var(--accent-warning);
 }
 
+.terminal-line.info {
+    color: var(--accent-primary);
+}
+
 /* Demo Panels */
 .demo-panels {
     display: grid;

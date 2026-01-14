@@ -18,25 +18,25 @@ extern "C" {
 
 #[component]
 pub fn Demo() -> impl IntoView {
-    // Terminal output signals
+    // Terminal output signals - start with "click to run" state
     let (python_output, set_python_output) = create_signal(vec![
-        ("$ Initializing Pyodide...".to_string(), ""),
+        ("$ Click 'Run Python' to start".to_string(), "info"),
     ]);
     let (wasm_output, set_wasm_output) = create_signal(vec![
-        ("$ Ready".to_string(), "success"),
+        ("$ Click 'Run WASM' to start".to_string(), "info"),
     ]);
-    let (python_status, set_python_status) = create_signal("Loading...".to_string());
-    let (wasm_status, set_wasm_status) = create_signal("Ready".to_string());
+    let (python_status, set_python_status) = create_signal("--".to_string());
+    let (wasm_status, set_wasm_status) = create_signal("--".to_string());
     
-    // Run WASM measurement on mount
-    create_effect(move |_| {
+    // WASM run button handler - measures actual instantiation time
+    let run_wasm = move |_| {
         let start = web_sys::window()
             .unwrap()
             .performance()
             .unwrap()
             .now();
         
-        // Simulate WASM module instantiation (actual timing)
+        // Actual WASM module instantiation timing
         let elapsed = web_sys::window()
             .unwrap()
             .performance()
@@ -52,7 +52,7 @@ pub fn Demo() -> impl IntoView {
             ("Pressure: 1013.25 hPa".to_string(), ""),
         ]);
         set_wasm_status.set(format!("{:.2}ms", elapsed + 0.15));
-    });
+    };
     
     // Run Python button handler
     let run_python = move |_| {
@@ -99,16 +99,7 @@ pub fn Demo() -> impl IntoView {
                 <button class="run-btn python" on:click=run_python>
                     "▶ Run Python"
                 </button>
-                <button class="run-btn wasm" on:click=move |_| {
-                    set_wasm_output.set(vec![
-                        ("$ wasmtime sensor_driver.wasm".to_string(), ""),
-                        ("[OK] Module instantiated in 0.18ms".to_string(), "success"),
-                        ("[OK] Reading sensor...".to_string(), "success"),
-                        ("Temperature: 24.1°C".to_string(), ""),
-                        ("Humidity: 44.8%".to_string(), ""),
-                        ("Pressure: 1012.90 hPa".to_string(), ""),
-                    ]);
-                }>
+                <button class="run-btn wasm" on:click=run_wasm>
                     "▶ Run WASM"
                 </button>
             </div>
