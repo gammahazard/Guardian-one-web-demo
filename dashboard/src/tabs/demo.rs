@@ -87,13 +87,19 @@ async fn measure_instantiate_time() -> f64 {
         .unwrap()
         .unchecked_into();
     
+    // Run 10 iterations and average for more accurate sub-millisecond timing
+    let iterations = 10;
     let start = now();
-    let instantiate_promise = js_sys::WebAssembly::instantiate_module(
-        &module,
-        &js_sys::Object::new()
-    );
-    let _ = wasm_bindgen_futures::JsFuture::from(instantiate_promise).await;
-    now() - start
+    
+    for _ in 0..iterations {
+        let instantiate_promise = js_sys::WebAssembly::instantiate_module(
+            &module,
+            &js_sys::Object::new()
+        );
+        let _ = wasm_bindgen_futures::JsFuture::from(instantiate_promise).await;
+    }
+    
+    (now() - start) / iterations as f64
 }
 
 // ============================================================================
@@ -325,15 +331,32 @@ pub fn Demo() -> impl IntoView {
         <div class="tab-content demo-tab">
             <h2>"The Demo: Python vs WASM Side-by-Side"</h2>
             
-            // metrics banner
-            <div class="metrics-banner">
-                <div class="metric-item">
-                    <span class="metric-label">"WASM Instantiate (real)"</span>
-                    <span class="metric-value">{move || format!("{:.2}ms", wasm_instantiate_ms.get())}</span>
-                </div>
-                <div class="metric-item">
-                    <span class="metric-label">"Python Worker Spawn"</span>
-                    <span class="metric-value warning">"~1800ms"</span>
+            // Initialization Time section
+            <div class="demo-section">
+                <h3>"⏱️ Initialization Time"</h3>
+                <p class="section-desc">"Compare cold-start performance between runtimes"</p>
+                
+                // metrics banner
+                <div class="metrics-banner">
+                    <div class="metric-item" title="Measured using WebAssembly API (10 iterations averaged)">
+                        <span class="metric-label">"WASM Instantiate (real)"</span>
+                        <span class="metric-value">{move || format!("{:.2}ms", wasm_instantiate_ms.get())}</span>
+                    </div>
+                    <div class="metric-item" title="Typical Python worker spawn time">
+                        <span class="metric-label">"Python Worker Spawn"</span>
+                        <span class="metric-value warning">"~1800ms"</span>
+                    </div>
+                    <div class="metric-item speedup">
+                        <span class="metric-label">"Speedup"</span>
+                        <span class="metric-value">{move || {
+                            let wasm = wasm_instantiate_ms.get();
+                            if wasm > 0.0 {
+                                format!("{:.0}x faster", 1800.0 / wasm)
+                            } else {
+                                "∞x faster".to_string()
+                            }
+                        }}</span>
+                    </div>
                 </div>
             </div>
             
@@ -491,13 +514,27 @@ pub fn Demo() -> impl IntoView {
                     </button>
                 </div>
                 <div class="attack-actions">
-                    <button class="action-btn attack" disabled=move || is_running.get() on:click=move |_| trigger_attack(())>
-                        {move || if is_running.get() { "⏳ Running..." } else { "🎯 Attack" }}
+                    <button 
+                        class="action-btn attack" 
+                        title="Run selected attack scenario"
+                        disabled=move || is_running.get() 
+                        on:click=move |_| trigger_attack(())
+                    >
+                        {move || if is_running.get() { "⏳ Running..." } else { "🎯 Launch Attack" }}
                     </button>
-                    <button class="action-btn runall" disabled=move || is_running.get() on:click=move |_| run_all_attacks(())>
-                        "🔥 Run All"
+                    <button 
+                        class="action-btn runall" 
+                        title="Run all 3 attacks sequentially"
+                        disabled=move || is_running.get() 
+                        on:click=move |_| run_all_attacks(())
+                    >
+                        "🔥 Run All Attacks"
                     </button>
-                    <button class="action-btn reset" on:click=move |_| reset_demo(())>
+                    <button 
+                        class="action-btn reset" 
+                        title="Reset all stats and terminals"
+                        on:click=move |_| reset_demo(())
+                    >
                         "🔄 Reset"
                     </button>
                 </div>
