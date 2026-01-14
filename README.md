@@ -19,8 +19,8 @@
 | Challenge | Industry Today | WASI 0.2 Approach |
 |:----------|:---------------|:------------------|
 | **Isolation** | Docker namespaces (shared kernel) | WASM sandbox (boundary separation) |
-| **Fault Recovery** | Process restart (~1.5s cold-start) | Instance re-instantiation (~0.03ms) |
-| **Binary Size** | 50-500 MB container images | 15-70 KB component binaries |
+| **Fault Recovery** | Process restart (~1.5s cold-start) | **Zero-Downtime** (2oo3 TMR masks faults) |
+| **Failure Mode** | Catastrophic Process Crash (Fatal) | **Byzantine Fault** (Contained & Voted Out) |
 | **Security Model** | Allow-then-block (iptables) | Deny-by-default (capability-based) |
 
 ---
@@ -32,6 +32,13 @@
 - **2oo3 TMR Voting** — Demonstrates Byzantine fault tolerance
 - **Raft-like Leader Election** — Sub-ms failover vs ~1.5s Python respawn
 - **WIT Contract Modal** — View the actual capability boundary definition
+
+> **💡 Key Technical Insight:**
+>
+> WASM's strict isolation turns **catastrophic process crashes** into **manageable Byzantine faults**.
+>
+> When a WASM module panics or violates security capabilities, it traps. The Host catches this trap, marks that single instance as "Faulty," and the **2oo3 TMR Voting** logic instantly ignores it. The system continues with **zero downtime**, and the faulty instance is hot-swapped in sub-milliseconds.
+
 
 ---
 
