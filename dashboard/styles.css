@@ -2961,3 +2961,225 @@ body {
         padding: 0.1rem 0.5rem;
     }
 }
+
+/* ============================================================================
+   OTA Update Simulator Styles
+   ============================================================================ */
+
+.ota-simulator {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.ota-simulator h3 {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.ota-simulator .section-desc {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+/* OTA Controls */
+.ota-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.control-group label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.fleet-slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--bg-secondary);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.fleet-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+.fleet-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    cursor: pointer;
+    border: none;
+}
+
+.slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.network-select {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.network-select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+/* OTA Comparison Cards */
+.ota-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.ota-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 2px solid var(--border-color);
+}
+
+.ota-card.docker {
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+.ota-card.wasm {
+    border-color: rgba(34, 197, 94, 0.5);
+}
+
+.ota-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ota-icon {
+    font-size: 1.5rem;
+}
+
+.ota-title {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.ota-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ota-stat:last-child {
+    border-bottom: none;
+}
+
+.ota-value {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.ota-value.warning {
+    color: var(--accent-warning);
+}
+
+.ota-value.success {
+    color: var(--accent-success);
+}
+
+.ota-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* OTA Savings Summary */
+.ota-savings {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(0, 212, 255, 0.1));
+    border: 1px solid var(--accent-success);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.savings-stat {
+    text-align: center;
+}
+
+.savings-value {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--accent-success);
+}
+
+.savings-stat.highlight .savings-value {
+    color: var(--accent-primary);
+}
+
+.savings-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.ota-note {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* OTA Mobile Responsive */
+@media (max-width: 768px) {
+    .ota-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .ota-comparison {
+        grid-template-columns: 1fr;
+    }
+
+    .ota-savings {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}

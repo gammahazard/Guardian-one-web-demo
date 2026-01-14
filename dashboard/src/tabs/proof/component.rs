@@ -201,6 +201,9 @@ pub fn Proof() -> impl IntoView {
                 <p class="metrics-note">"All timing values measured in your browser using real WebAssembly API and Pyodide."</p>
             </div>
             
+            // ota update comparison simulator
+            <super::ota_simulator::OtaSimulator />
+            
             <div class="foundation-projects">
                 <h3>"🧪 Foundation Projects"</h3>
                 <p class="foundation-desc">"Learning projects where I explored each concept. The fault recovery and isolation patterns demonstrated here are adapted from these implementations."</p>
