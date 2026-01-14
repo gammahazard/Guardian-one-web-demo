@@ -22,6 +22,7 @@ struct AttackConfig {
     name: &'static str,
     restart_ms: u32,          // fallback if pyodide_load_ms unavailable
     wasm_trap: &'static str,
+    wit_func: &'static str,   // blocked WIT function for logs
 }
 
 /// wasm instance state for 2oo3 voting visualization
@@ -37,21 +38,25 @@ fn get_attack_config(attack: &str) -> AttackConfig {
             name: "Buffer Overflow",
             restart_ms: 1800,
             wasm_trap: "out of bounds memory access",
+            wit_func: "malloc-large()",
         },
         "dataExfil" => AttackConfig {
             name: "Data Exfiltration",
             restart_ms: 2100,
             wasm_trap: "capability not granted: network",
+            wit_func: "open-socket()",
         },
         "pathTraversal" => AttackConfig {
             name: "Path Traversal",
             restart_ms: 1500,
             wasm_trap: "capability not granted: filesystem",
+            wit_func: "read-file()",
         },
         _ => AttackConfig {
             name: "Unknown Attack",
             restart_ms: 1000,
             wasm_trap: "trap",
+            wit_func: "unknown()",
         },
     }
 }
@@ -63,32 +68,36 @@ fn get_attack_config(attack: &str) -> AttackConfig {
 const WIT_CODE_EXCERPT: &str = r#"// wit/attacks.wit - WASI 0.2 Component Model
 package reliability-triad:attacks@0.1.0;
 
-/// Capabilities DENIED to untrusted components
+interface common-types {
+    record telemetry-packet { timestamp: u64, value: f64, status: u8 }
+}
+
+/// "Honey Pot" - capabilities attacker wants but shouldn't have
 interface attack-surface {
-    // Memory allocation - blocked if exceeds limit
-    record allocation-request { size-bytes: u64 }
-    enum allocation-error { limit-exceeded, denied-by-policy }
-    
-    // Network access - blocked if capability not granted
-    record socket-request { address: string, port: u16 }
-    enum network-error { capability-not-granted }
-    
-    // Filesystem - blocked if path not in allowed list
-    record file-request { path: string }
-    enum filesystem-error { capability-not-granted, path-not-allowed }
+    malloc-large: func(size: u64) -> result<u64, string>;
+    open-socket: func(addr: string) -> result<u32, string>;
+    read-file: func(path: string) -> result<list<u8>, string>;
 }
 
-/// What legitimate sensor components CAN import
+/// Legitimate sensor capabilities
 interface sensor-capabilities {
-    allocate-buffer: func(size: u64) -> result<u64, string>;
-    read-sensor: func(channel: u8) -> result<f64, string>;
-    publish-telemetry: func(topic: string, data: list<u8>);
+    read-hardware-register: func(reg-id: u32) -> f64;
+    log-debug: func(msg: string);
 }
 
-/// 2oo3 TMR voting interface
-interface tmr-voting {
-    vote: func(outputs: list<u8>) -> vote-result;
-    rebuild-instance: func(id: u8) -> result<u64, string>;
+/// WORKER: Instantiated 3x, NO knowledge of TMR/voting
+world sensor-node {
+    import sensor-capabilities;  // Granted
+    import attack-surface;       // Host returns errors
+    export process-tick: func() -> common-types.telemetry-packet;
+}
+
+/// SUPERVISOR: Manages lifecycle, runs on host
+world system-supervisor { import tmr-logic; }
+
+interface tmr-logic {
+    consensus-2oo3: func(a: ..., b: ..., c: ...) -> result<packet, string>;
+    trigger-hot-swap: func(node-index: u8);
 }
 "#;
 
@@ -541,6 +550,7 @@ result
             config.restart_ms
         };
         let wasm_trap = config.wasm_trap.to_string();
+        let wit_func = config.wit_func.to_string();
         let attack_code_owned = attack_code.to_string();
         
         // Run REAL Python attack via Pyodide
@@ -684,7 +694,7 @@ result
                 set_leader_id.set(new_leader);
                 set_wasm_logs.update(|logs| {
                     logs.push(LogEntry { level: "warn".into(), message: format!("[TRAP] I{}: {}", faulty_idx, wasm_trap) });
-                    logs.push(LogEntry { level: "info".into(), message: "[WIT] attack-surface capability not imported → syscall denied".into() });
+                    logs.push(LogEntry { level: "info".into(), message: format!("[WIT] attack-surface.{} blocked → capability not imported", wit_func) });
                     logs.push(LogEntry { level: "warn".into(), message: format!("[RAFT] Leader I{} failed! Electing new leader...", faulty_idx) });
                     logs.push(LogEntry { level: "success".into(), message: format!("[RAFT] I{} elected as new leader in 0.04ms", new_leader) });
                     // Show actual output comparison
@@ -694,7 +704,7 @@ result
             } else {
                 set_wasm_logs.update(|logs| {
                     logs.push(LogEntry { level: "warn".into(), message: format!("[TRAP] I{}: {}", faulty_idx, wasm_trap) });
-                    logs.push(LogEntry { level: "info".into(), message: "[WIT] attack-surface capability not imported → syscall denied".into() });
+                    logs.push(LogEntry { level: "info".into(), message: format!("[WIT] attack-surface.{} blocked → capability not imported", wit_func) });
                     // Show actual output comparison
                     logs.push(LogEntry { level: "info".into(), message: format!("[OUT] I{}: {:.1}°C | I{}: {:.1}°C | I{}: TRAP", healthy[0], sensor_val, healthy[1], sensor_val, faulty_idx) });
                     logs.push(LogEntry { level: "success".into(), message: format!("[VOTE] 2/3 outputs agree ({:.1}°C) - using majority value", sensor_val) });
