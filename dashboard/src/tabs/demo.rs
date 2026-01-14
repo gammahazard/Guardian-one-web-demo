@@ -132,6 +132,7 @@ pub fn Demo() -> impl IntoView {
     let (python_exec_ms, set_python_exec_ms) = create_signal(0.0f64);
     let (wasm_exec_ms, set_wasm_exec_ms) = create_signal(0.0f64);
     let (sensor_running, set_sensor_running) = create_signal(false);
+    let (sensor_ran, set_sensor_ran) = create_signal(false);
     
     // ========================================================================
     // 2oo3 voting state (three wasm instances)
@@ -223,6 +224,7 @@ pub fn Demo() -> impl IntoView {
         let wasm_result = (23.5f32, 45.2f32, 1013.25f32);
         let wasm_elapsed = now() - wasm_start;
         set_wasm_exec_ms.set(wasm_elapsed);
+        set_sensor_ran.set(true);
         
         // Log WASM results immediately
         set_wasm_logs.update(|logs| {
@@ -478,8 +480,10 @@ result
                         <div class="sensor-metric">
                             <span class="sensor-label">"WASM"</span>
                             <span class="sensor-value success">{move || {
-                                let ms = wasm_exec_ms.get();
-                                if ms > 0.0 { format!("{:.3}ms", ms) } else { "—".to_string() }
+                                if sensor_ran.get() {
+                                    let ms = wasm_exec_ms.get();
+                                    if ms < 0.001 { "<0.001ms".to_string() } else { format!("{:.3}ms", ms) }
+                                } else { "—".to_string() }
                             }}</span>
                         </div>
                         <div class="sensor-metric">
